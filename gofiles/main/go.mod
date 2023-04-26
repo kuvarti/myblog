@@ -1,4 +1,4 @@
-module willkuvarti.com/deneme
+module willkuvarti.com/server
 
 go 1.20
 

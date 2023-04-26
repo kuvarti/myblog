@@ -16,14 +16,14 @@ type htmlrequests struct {
 	Slidemenu string
 }
 
+var event htmlrequests
+
 func gethtmlvar() htmlrequests {
 	var ret htmlrequests
 	ret.Md = mdgetter.Getfile("html/last-activity.html")
 	ret.Slidemenu = mdgetter.Getfile("html/slidemenu.html")
 	return ret
 }
-
-var event = gethtmlvar()
 
 func index(w http.ResponseWriter, r *http.Request) {
 	var dosyam = "html/index.html"
@@ -34,8 +34,6 @@ func index(w http.ResponseWriter, r *http.Request) {
 	}
 	event = gethtmlvar()
 	t.Execute(w, event)
-	//http.FileServer(http.Dir("html/css/deneme.css"))
-	http.ServeFile(w, r, "html/css/deneme.css")
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -48,8 +46,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
-	http.HandleFunc("/", handler)
+	http.Handle("/", http.FileServer(http.Dir("./html")))
+	//http.HandleFunc("/", handler)
 	err := http.ListenAndServe("localhost:8080", nil)
 	if err != nil {
 		panic(err)

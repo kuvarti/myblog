@@ -8,7 +8,7 @@ html{
 }
 body{
     height: 100%;
-    background-image: url("https://w.wallhaven.cc/full/m3/wallhaven-m3zjx1.jpg");
+    background-image: url("../img/wallhaven-m3zjx1.jpg");
     background-size: cover;
 }
 #sliding{
