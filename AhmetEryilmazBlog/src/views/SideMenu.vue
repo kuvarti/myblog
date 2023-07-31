@@ -1,11 +1,11 @@
 <template>
 	<div id="sliding">
-		saas
 	</div>
 </template>
 
 <style scoped>
 #sliding {
+	width: 2%;
 	height: 100%;
 	position: fixed;
 	background-color: #382D40;

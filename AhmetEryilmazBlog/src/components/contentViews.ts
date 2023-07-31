@@ -1,0 +1,1 @@
+export { default as viewProfile } from "@/components/contentViewComponents/viewProfile.vue";
