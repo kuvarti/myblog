@@ -13,31 +13,13 @@ html {
 
 body {
 	height: 100%;
-	background-image: url("../components/pictures/wallhaven-m3zjx1.jpg");
+	background-color: darkslategray;
+	/* background-image: url("../components/pictures/wallhaven-m3zjx1.jpg"); */
 	background-size: cover;
 }
 
 /* 
-#sliding {
-	top: 0;
-	left: 0;
-	width: 66%;
-	left: -62.5%;
-	margin-top: 0;
-	height: 100%;
-	position: fixed;
-	border-width: 3px 3px 3px 0;
-	border-style: solid;
-	border-color: white;
-	border-radius: 0 10px 10px 0;
-	background-color: #382D40;
-	transition: left 1s;
-}
 
-#sliding:hover {
-	left: 0px;
-	transition: left 1s;
-}
 
 #content {
 	background-color: #2D3840;

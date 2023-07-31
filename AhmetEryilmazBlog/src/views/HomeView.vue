@@ -2,7 +2,8 @@
 </script>
 
 <template>
-	<!-- <div class="text-center text-light m-0 h-100 .container-lg">
+	<h1>selam</h1>
+	<div v-if="false" class="text-center text-light m-0 h-100 .container-lg">
 		<div class="row m-0 h-100">
 			<div class="col-sm-8 h-100 icerik">
 				<div id="content" class="h-100 alticerik">
@@ -37,5 +38,5 @@
 		<div id="sliding">
 			<div class="h-100 w-100-bg-light">asd</div>
 		</div>
-	</div> -->
+	</div>
 </template>
