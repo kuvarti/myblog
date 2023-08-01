@@ -1,10 +1,10 @@
 <template>
 	<teleport to='#sidemenu'>
-		<sidemenu></sidemenu>
+		<routes.sideMenu />
 	</teleport>
-	<div id="content-grid" class="grid grid-cols-10 h-screen">
-		<div class="col-span-7"></div>
-		<contentView.viewProfile class="col-span-3" />
+	<div id="content-grid" class="grid grid-cols-10 grid-flow-row h-screen">
+		<routes.contents class="col-span-7" />
+		<routes.viewProfile class="col-span-3" />
 	</div>
 </template>
 
@@ -15,6 +15,5 @@
 </style>
 
 <script setup lang="ts">
-import sidemenu from '@/views/SideMenu.vue'
-import * as contentView from '@/components/contentViews'
+import * as routes from '@/router/routes'
 </script>

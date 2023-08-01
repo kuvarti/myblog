@@ -1,1 +1,1 @@
-export { default as viewProfile } from "@/components/contentViewComponents/viewProfile.vue";
+export { default as viewProfileUpper } from "@/components/contentViewComponents/upperProfile.vue";
