@@ -2,9 +2,9 @@
 	<teleport to='#sidemenu'>
 		<routes.sideMenu />
 	</teleport>
-	<div id="content-grid" class="grid grid-cols-10 grid-flow-row h-screen">
-		<routes.contents class="col-span-7" />
-		<routes.viewProfile class="col-span-3" />
+	<div id="content-grid" class="">
+		<routes.contents class="" />
+		<routes.viewProfile v-if="GlobalStore.getters.GetScreenLevel > 2" class="" />
 	</div>
 </template>
 
@@ -16,4 +16,17 @@
 
 <script setup lang="ts">
 import * as routes from '@/router/routes'
+import { useStore } from 'vuex';
+import { onMounted, ref } from 'vue';
+
+let GlobalStore = useStore();
+let handleResize = function() {
+	GlobalStore.dispatch('SetScreenLevel', window.innerWidth)
+}
+
+onMounted: {
+	window.addEventListener('resize', handleResize);
+	GlobalStore.dispatch('SetScreenLevel', window.innerWidth)
+}
+
 </script>
