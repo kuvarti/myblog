@@ -1,0 +1,34 @@
+
+#sliding {
+	position: absolute;
+	background-color: #382D40;
+	border-style: solid;
+	border-color: white;
+	animation-duration: 1s;
+}
+
+.leftMenu {
+	width: 70%;
+	left: -68%;
+	height: 100%;
+	border-width: 3px 3px 3px 3px;
+	border-radius: 0 10px 10px 0;
+}
+
+.topMenu {
+	width: 100%;
+	height: 70%;
+	top: -68%;
+	border-width: 3px 3px 3px 3px;
+	border-radius: 0 0px 10px 10px;
+}
+
+.topMenu:hover{
+	top: 0;
+	background-color: aqua;
+}
+
+.leftMenu:hover{
+	left: 0;
+	background-color: aqua;
+}

@@ -17,17 +17,16 @@ export default createStore({
 	},
 	actions: {
 		SetScreenLevel(state:any, width: number) {
-			if (width < 576) {
-				state.commit('ScreenLevelMutation', MediaEnum.ExtraSmall);
-			} else if (width < 768) {
-				state.commit('ScreenLevelMutation', MediaEnum.Small);
-			} else if (width < 992) {
-				state.commit('ScreenLevelMutation', MediaEnum.Medium);
-			} else if (width < 1200) {
-				state.commit('ScreenLevelMutation', MediaEnum.High);
-			} else {
+			if (width >= 1536) //* 1400 Ustu
 				state.commit('ScreenLevelMutation', MediaEnum.ExtraHigh);
-			}
+			else if (width >= 1280) //* 1200 Ustu
+				state.commit('ScreenLevelMutation', MediaEnum.High);
+			else if (width >= 1024) //* 992 Ustu
+				state.commit('ScreenLevelMutation', MediaEnum.Medium);
+			else if (width >= 768) //* 768 Ustu
+				state.commit('ScreenLevelMutation', MediaEnum.Small);
+			else //* 768 alti
+				state.commit('ScreenLevelMutation', MediaEnum.ExtraSmall);
 		}
 	}
 })

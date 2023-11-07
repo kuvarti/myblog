@@ -1,6 +1,6 @@
 <template>
 	<div class="py-16 pl-8">
-		<div class="rounded border-2 border-white h-full w-full overscroll-none">
+		<div class="">
 			{{ returnedHTML }}
 		</div>
 	</div>
@@ -13,6 +13,11 @@
 </style>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-const returnedHTML = ref<any>('selam canim');
+import { computed } from 'vue';
+import { useStore } from 'vuex';
+
+let GlobalStore = useStore()
+const returnedHTML = computed(() => {
+	return GlobalStore.getters.GetScreenLevel
+})
 </script>

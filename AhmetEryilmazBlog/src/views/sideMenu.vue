@@ -1,26 +1,20 @@
 <template>
-	<div id="sliding">
+	<div id="sliding" :class="ActiveClass">
 	</div>
 </template>
 
-<style scoped>
-#sliding {
-	width: 70%;
-	height: 100%;
-	left: -68%;
-	position: fixed;
-	background-color: #382D40;
-	border-width: 3px 3px 3px 0;
-	border-style: solid;
-	border-color: white;
-	border-radius: 0 10px 10px 0;
-}
-
-#sliding :hover s{
-	left: 0;
-	background-color: aqua;
-}
+<style>
 </style>
 
 <script setup lang="ts">
+import { computed, ref } from 'vue';
+import { useStore } from 'vuex';
+
+let GlobalStore = useStore();
+let ActiveClass = computed(() => {
+	if (GlobalStore.getters.GetScreenLevel < 2)
+		return 'topMenu'
+	else
+		return 'leftMenu'
+})
 </script>
