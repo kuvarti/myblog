@@ -3,16 +3,21 @@ import { MediaEnum } from '@/components/utils/utils'
 
 export default createStore({
 	state: {
-		ScreenLevel: MediaEnum.Medium
+		ScreenLevel: MediaEnum.Medium,
+		isMobile: true
 	},
 	getters: {
 		GetScreenLevel(state: any): typeof MediaEnum {
 			return state.ScreenLevel
+		},
+		GetIsMobile(state: any): boolean {
+			return state.ScreenLevel < 2
 		}
 	},
 	mutations: {
 		ScreenLevelMutation(state:any, level: typeof MediaEnum) {
 			state.ScreenLevel = level;
+			state.isMobile = state.ScreenLevel < 2;
 		}
 	},
 	actions: {

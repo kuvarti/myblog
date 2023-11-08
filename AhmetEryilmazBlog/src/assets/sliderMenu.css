@@ -4,12 +4,12 @@
 	background-color: #382D40;
 	border-style: solid;
 	border-color: white;
-	animation-duration: 1s;
+	animation-duration: 2s;
 }
 
 .leftMenu {
-	width: 70%;
-	left: -68%;
+	width: 75%;
+	left: -73%;
 	height: 100%;
 	border-width: 3px 3px 3px 3px;
 	border-radius: 0 10px 10px 0;
@@ -18,7 +18,7 @@
 .topMenu {
 	width: 100%;
 	height: 70%;
-	top: -68%;
+	top: -66%;
 	border-width: 3px 3px 3px 3px;
 	border-radius: 0 0px 10px 10px;
 }

@@ -1,5 +1,5 @@
 <template>
-	<div id="sliding" :class="ActiveClass">
+	<div id="sliding" class="hover:duration-500" :class="ActiveClass">
 	</div>
 </template>
 

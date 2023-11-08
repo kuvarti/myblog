@@ -2,31 +2,28 @@
 	<teleport to='#sidemenu'>
 		<routes.sideMenu />
 	</teleport>
-	<div id="content-grid" class="">
-		<routes.contents class="" />
-		<routes.viewProfile v-if="GlobalStore.getters.GetScreenLevel > 2" class="" />
+	<div id="content-grid" class="flex h-screen" :class="GlobalStore.getters.GetIsMobile ? 'flex-col mt-8' : 'flex-row  ml-8'">
+		<routes.viewProfile v-if="GlobalStore.getters.GetIsMobile" class="bg-midnightPurple border-2 rounded m-4 basis-1/4" :class="GlobalStore.getters.GetIsMobile ? 'h-8' : 'h-screen'"/>
+		<routes.contents class="bg-midnightPurple border-2 rounded m-4" :class="GlobalStore.getters.GetIsMobile ? 'basis-full' : 'basis-3/4'"/>
+		<routes.viewProfile v-if="!GlobalStore.getters.GetIsMobile" class="bg-midnightPurple border-2 rounded m-4 basis-1/4"/>
 	</div>
 </template>
 
 <style scoped>
-#content-grid {
-	margin-left: 2%;
-}
 </style>
 
 <script setup lang="ts">
 import * as routes from '@/router/routes'
 import { useStore } from 'vuex';
-import { onMounted, ref } from 'vue';
+import { onMounted } from 'vue';
 
 let GlobalStore = useStore();
 let handleResize = function() {
 	GlobalStore.dispatch('SetScreenLevel', window.innerWidth)
 }
 
-onMounted: {
+onMounted(() => {
 	window.addEventListener('resize', handleResize);
 	GlobalStore.dispatch('SetScreenLevel', window.innerWidth)
-}
-
+})
 </script>

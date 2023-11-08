@@ -1,8 +1,8 @@
 <template>
-	<div id="profile-grid" class="p-16">
+	<div id="profile-grid" class="">
 		<div class="">
-			<contentView.viewProfileUpper class="h-48 p-4" />
-			<div class=""></div>
+			<contentView.viewProfileUpper class="p-4" />
+			<!-- <div class=""></div> -->
 		</div>
 	</div>
 </template>
