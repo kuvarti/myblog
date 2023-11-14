@@ -15,7 +15,9 @@
 <script setup lang="ts">
 import * as routes from '@/router/routes'
 import { useStore } from 'vuex';
-import { onMounted } from 'vue';
+import { onMounted, provide } from 'vue'
+import serviceClass from '@/service/service'
+provide('Service', serviceClass);
 
 let GlobalStore = useStore();
 let handleResize = function() {

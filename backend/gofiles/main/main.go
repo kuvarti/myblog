@@ -1,55 +1,33 @@
 package main
 
 import (
-	_ "bytes"
-	_ "encoding/json"
-	"fmt"
-	"html/template"
-	_ "io/ioutil"
-	"net/http"
+	"time"
 
-	"willkuvarti.com/mdgetter"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
-type htmlrequests struct {
-	Md        string
-	Slidemenu string
-}
-
-var event htmlrequests
-
-func gethtmlvar() htmlrequests {
-	var ret htmlrequests
-	ret.Md = mdgetter.Getfile("html/last-activity.html")
-	ret.Slidemenu = mdgetter.Getfile("html/slidemenu.html")
-	return ret
-}
-
-func index(w http.ResponseWriter, r *http.Request) {
-	var dosyam = "html/index.html"
-	t, err := template.ParseFiles(dosyam)
-	if err != nil {
-		fmt.Println("There is an error while page on loading : ", err)
-		return
-	}
-	event = gethtmlvar()
-	t.Execute(w, event)
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-	switch r.URL.Path {
-	case "/test":
-		fmt.Fprint(w, "Test Workes")
-	default:
-		index(w, r)
-	}
-}
-
 func main() {
-	http.Handle("/", http.FileServer(http.Dir("./html")))
-	//http.HandleFunc("/", handler)
-	err := http.ListenAndServe("localhost:8080", nil)
-	if err != nil {
-		panic(err)
-	}
+	r := gin.Default()
+
+	// Configure CORS
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		AllowOriginFunc: func(origin string) bool {
+			return origin == "http://localhost:5173"
+		},
+		MaxAge: 12 * time.Hour,
+	}))
+
+	r.GET("/someEndpoint", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Hello World",
+		})
+	})
+
+	r.Run() // listen and serve on 0.0.0.0:8080
 }

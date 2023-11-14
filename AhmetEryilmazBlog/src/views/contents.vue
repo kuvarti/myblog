@@ -1,5 +1,5 @@
 <template>
-	<div class="py-16 pl-8">
+	<div class="py-4 pl-4">
 		<div class="">
 			{{ returnedHTML }}
 		</div>

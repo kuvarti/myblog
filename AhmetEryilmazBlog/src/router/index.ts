@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import * as routes from '@/router/routes'
 
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
@@ -6,7 +7,7 @@ const router = createRouter({
 		{
 			path: '/',
 			name: 'home',
-			component: () => import("@/views/viewProfile.vue")
+			component: () => Promise.resolve(routes.viewProfile)
 		}
 	]
 })
