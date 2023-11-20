@@ -6,7 +6,7 @@ const router = createRouter({
 	routes: [
 		{
 			path: '/',
-			name: 'home',
+			name: 'content',
 			component: () => Promise.resolve(routes.viewProfile)
 		}
 	]

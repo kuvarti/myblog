@@ -1,8 +1,7 @@
 <template>
 	<div class="py-4 pl-4">
 		<div class="">
-			{{ returnedHTML }}
-			<p> hy gidi hey gidi hey </p>
+			<p> Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi ab optio quae voluptatum aut, tenetur dolores. Totam, non reiciendis. Sed ab aperiam natus numquam totam eum incidunt consectetur obcaecati itaque! </p>
 		</div>
 	</div>
 </template>
@@ -19,6 +18,6 @@ import { useStore } from 'vuex';
 
 let GlobalStore = useStore()
 const returnedHTML = computed(() => {
-	return GlobalStore.getters.GetActivePage
+	return GlobalStore.getters.IsMobile
 })
 </script>

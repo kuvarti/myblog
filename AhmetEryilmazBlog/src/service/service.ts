@@ -12,19 +12,20 @@ class serviceClass{
 			}
 		});
 	}
-	public async getMenu() {
+	public async getMenu() : Promise<Array<[string, string]>> {
 		return new Promise((resolve) => {
-			this.apiClient.get('someEndpoint').catch((reason) => {
+			this.apiClient.get('MenuList').catch((reason) => {
 				console.log('apiget field fail:', reason);
+				resolve([])
 			}).then((value) => {
-				if (value)
-				{
-					resolve(value.data.message)
-				}
+				if (value && value.data)
+					resolve(value.data.menu)
+				else
+					resolve([])
 			})
 		})
 	}
 };
 
-export type ServiceType = serviceClass | undefined;
+export type ServiceType = serviceClass | undefined | null;
 export default new serviceClass();

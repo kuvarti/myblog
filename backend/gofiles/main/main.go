@@ -7,6 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type Header struct {
+	Name    string `json:"name"`
+	Caption string `json:"Caption"`
+}
+
 func main() {
 	r := gin.Default()
 
@@ -23,9 +28,15 @@ func main() {
 		MaxAge: 12 * time.Hour,
 	}))
 
-	r.GET("/someEndpoint", func(c *gin.Context) {
+	headers := []Header{
+		{Name: "contents", Caption: "Ana Sayfa"},
+		{Name: "lists", Caption: "Blog Yazilari"},
+		{Name: "myProjects", Caption: "Projelerim"},
+		{Name: "communication", Caption: "Iletisim"},
+	}
+	r.GET("/MenuList", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"message": "Hello World",
+			"menu": headers,
 		})
 	})
 
