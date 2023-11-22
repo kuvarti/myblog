@@ -7,7 +7,7 @@ module.exports = {
 				'midnightPurple': '#382D40',
 				'mainComponentBackground': '#382D40',
 				'activePageColor': '#eef2ff',
-				'deActivePageColor': '#c7d2fe',
+				'deActivePageColor': '#a5b4fc',
 			},
 			fontFamily: {
 				FiraCode: ["Fira Code", "monospace"],

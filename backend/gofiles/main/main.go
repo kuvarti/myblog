@@ -8,8 +8,9 @@ import (
 )
 
 type Header struct {
-	Name    string `json:"name"`
+	Name    string `json:"Name"`
 	Caption string `json:"Caption"`
+	Path    string `json:Path`
 }
 
 func main() {
@@ -29,10 +30,10 @@ func main() {
 	}))
 
 	headers := []Header{
-		{Name: "contents", Caption: "Ana Sayfa"},
-		{Name: "lists", Caption: "Blog Yazilari"},
-		{Name: "myProjects", Caption: "Projelerim"},
-		{Name: "communication", Caption: "Iletisim"},
+		{Name: "contents", Caption: "Ana Sayfa", Path: "/"},
+		{Name: "lists", Caption: "Blog Yazilari", Path: "/lists"},
+		{Name: "myProjects", Caption: "Projelerim", Path: "/"},
+		{Name: "communication", Caption: "Iletisim", Path: "/"},
 	}
 	r.GET("/MenuList", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -40,5 +41,5 @@ func main() {
 		})
 	})
 
-	r.Run() // listen and serve on 0.0.0.0:8080
+	r.Run()
 }

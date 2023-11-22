@@ -7,7 +7,12 @@ const router = createRouter({
 		{
 			path: '/',
 			name: 'content',
-			component: () => Promise.resolve(routes.viewProfile)
+			component: () => Promise.resolve(routes.contents)
+		},
+		{
+			path:'/lists',
+			name: 'lists',
+			component: () =>Promise.resolve(routes.lists)
 		}
 	]
 })

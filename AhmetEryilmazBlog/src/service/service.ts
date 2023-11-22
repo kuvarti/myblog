@@ -1,9 +1,9 @@
 import axios, { type AxiosInstance } from "axios";
+import { type MenuListModal } from '@/types/MenuListModal'
 
 class serviceClass{
 	private apiClient:AxiosInstance;
 	constructor() {
-		console.log('Constructor called')
 		this.apiClient = axios.create({
 			baseURL: 'http://localhost:8080',
 			headers: {
@@ -12,7 +12,7 @@ class serviceClass{
 			}
 		});
 	}
-	public async getMenu() : Promise<Array<[string, string]>> {
+	public async getMenu() : Promise<Array<MenuListModal>> {
 		return new Promise((resolve) => {
 			this.apiClient.get('MenuList').catch((reason) => {
 				console.log('apiget field fail:', reason);
