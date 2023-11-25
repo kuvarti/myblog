@@ -8,16 +8,15 @@ import (
 )
 
 type Header struct {
-	Name    string `json:"Name"`
-	Caption string `json:"Caption"`
+	Name    string `json"Name`
+	Caption string `json:Caption`
 	Path    string `json:Path`
 }
 
 func main() {
-	r := gin.Default()
+	server := gin.Default()
 
-	// Configure CORS
-	r.Use(cors.New(cors.Config{
+	server.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
@@ -28,18 +27,16 @@ func main() {
 		},
 		MaxAge: 12 * time.Hour,
 	}))
-
 	headers := []Header{
 		{Name: "contents", Caption: "Ana Sayfa", Path: "/"},
 		{Name: "lists", Caption: "Blog Yazilari", Path: "/lists"},
 		{Name: "myProjects", Caption: "Projelerim", Path: "/"},
 		{Name: "communication", Caption: "Iletisim", Path: "/"},
 	}
-	r.GET("/MenuList", func(c *gin.Context) {
+	server.GET("/MenuList", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"menu": headers,
 		})
 	})
-
-	r.Run()
+	server.Run()
 }
