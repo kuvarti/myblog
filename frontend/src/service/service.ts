@@ -14,12 +14,12 @@ class serviceClass{
 	}
 	public async getMenu() : Promise<Array<MenuListModal>> {
 		return new Promise((resolve) => {
-			this.apiClient.get('MenuList').catch((reason) => {
+			this.apiClient.get('MenuList/Menu').catch((reason) => {
 				console.log('apiget field fail:', reason);
 				resolve([])
 			}).then((value) => {
 				if (value && value.data)
-					resolve(value.data.menu)
+					resolve(value.data)
 				else
 					resolve([])
 			})
