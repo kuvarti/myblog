@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { defineProps, computed } from 'vue'
+import { computed } from 'vue'
 import { type MenuListModal } from '@/types/MenuListModal'
 
 let route = useRoute();
