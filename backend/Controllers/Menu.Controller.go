@@ -12,10 +12,13 @@ type MenuController struct {
 	MenuService services.MenuService
 }
 
-func InitMenuController(MenuService services.MenuService) MenuController {
-	return MenuController{
+func InitMenuController(MenuService services.MenuService, server *gin.Engine) MenuController {
+	group := server.Group("/MenuList")
+	mc := MenuController{
 		MenuService: MenuService,
 	}
+	group.GET("/Menu", mc.GetMenu)
+	return mc
 }
 
 func (mc *MenuController) GetMenu(ctx *gin.Context) {
@@ -26,8 +29,4 @@ func (mc *MenuController) GetMenu(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, returnMenu)
-}
-
-func (mc *MenuController) InitMenuController(server *gin.Engine) {
-	server.GET("/MenuList", mc.GetMenu)
 }
