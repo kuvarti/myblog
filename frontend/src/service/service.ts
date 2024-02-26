@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance } from "axios";
 import { type MenuListModal } from '@/types/MenuListModal'
+import { type PageResponseModal } from '@/types/PageResponseModal'
 
 class serviceClass{
 	private apiClient:AxiosInstance;
@@ -22,6 +23,21 @@ class serviceClass{
 					resolve(value.data)
 				else
 					resolve([])
+			})
+		})
+	}//0.0.0.0:8080/Page?PageName=SoLong
+	public async getPage(pageName: string) : Promise<PageResponseModal> {
+		return new Promise((resolve) => {
+			this.apiClient.get('Page?PageName=' + pageName).catch((reason) => {
+				console.log('apiget field fail:', reason);
+				resolve({Page: '', ViewType: ''})
+			}).then((value) => {
+				if (value && value.data){
+					value.data.Page = value.data.Page.replace(/\/n/g, '\n').replace(/\\n/g, '\n')
+					resolve(value.data)
+				}
+				else
+					resolve({Page: '', ViewType: ''})
 			})
 		})
 	}

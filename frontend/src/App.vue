@@ -35,6 +35,6 @@ let handleResize = function() {
 onMounted(() => {
 	window.addEventListener('resize', handleResize);
 	GlobalStore.dispatch('SetScreenLevel', window.innerWidth);
-	GlobalStore.dispatch('SetActivePage', "mainPage");
+	GlobalStore.dispatch('SetActivePage', "MainPage");
 })
 </script>

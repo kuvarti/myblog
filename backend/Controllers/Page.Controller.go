@@ -26,5 +26,8 @@ func (pc *PageController) GetPage(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, respons)
+	ctx.JSON(http.StatusOK, gin.H{
+		"ViewType" : respons.ViewType,
+		"Page" : respons.Text,
+	})
 }

@@ -15,7 +15,7 @@ import (
 )
 
 type PageService interface {
-	GetPage(string) (string, error)
+	GetPage(string) (models.PageModel, error)
 	ConvertmdToHTML(md []byte) []byte
 }
 
@@ -45,23 +45,23 @@ func (psi *PageServiceImplementation) ConvertmdToHTML(md []byte) []byte {
 
 func (psi *PageServiceImplementation) GetPageText(pn string) (string, error) {
 	var html []byte
-	deneme := strings.Split(pn, "\n");
-	for i := 0; i < len(deneme); i++{
-		if strings.Contains(deneme[i], "<") {
-			html = append(html, []byte(deneme[i])...);
-		} else if deneme[i] == "" {
+	lines := strings.Split(strings.ReplaceAll(pn, "/n", "\n"), "\n");
+	for i := 0; i < len(lines); i++{
+		if strings.Contains(lines[i], "<") {
+			html = append(html, []byte(lines[i])...);
+		} else if lines[i] == "" {
 			continue
 		} else {
 			var newConvert []byte
 			for {
-				if !strings.Contains(deneme[i], "<") {
-					newConvert = append(newConvert, []byte(deneme[i])...)
+				if !strings.Contains(lines[i], "<") {
+					newConvert = append(newConvert, []byte(lines[i])...)
 					newConvert = append(newConvert, []byte("\n")...)
 					i++
 				} else {
 					break
 				}
-				if (i+1) == len(deneme) {
+				if (i+1) == len(lines) {
 					break
 				}
 			}
@@ -72,47 +72,46 @@ func (psi *PageServiceImplementation) GetPageText(pn string) (string, error) {
 	return string(html), nil
 }
 
-func (psi *PageServiceImplementation) GetPage(pn string) (string, error) {
+func (psi *PageServiceImplementation) GetPage(pn string) (models.PageModel, error) {
 	var Page models.PageModel
 	querry := bson.D{bson.E{Key: "PageName", Value: pn}}
 	err := psi.collection.FindOne(psi.ctx, querry).Decode(&Page);
 	if err != nil {
-		return "", err
+		return models.PageModel{}, err
 	}
 	hasher := sha1.New()
 	_, err = io.WriteString(hasher, Page.Page)
 	if err != nil {
-		return "", err
+		return models.PageModel{}, err
 	}
 	if Page.Text == "" || !testEq(Page.Hash, hasher.Sum(nil)) {
 		Page.Text, err = psi.GetPageText(Page.Page)
 		Page.Hash = hasher.Sum(nil)
 		if err != nil {
-			return "", err
+			return models.PageModel{}, err
 		}
 		_, err = psi.collection.UpdateOne(psi.ctx, querry, bson.D{
 			bson.E{Key: "$set", Value: bson.D{
-				bson.E{Key: "Page", Value: Page.Text},
 				bson.E{Key: "Hash", Value: Page.Hash},
 				bson.E{Key: "Text", Value: Page.Text},
 			}},
 		})
 		if err != nil {
-			return "", err
+			return models.PageModel{}, err
 		}
 	}
-	response := strings.ReplaceAll(Page.Text, "\n", "")
-	return response, nil
+	Page.Text = strings.ReplaceAll(Page.Text, "\n", "")
+	return Page, nil
 }
 
 func testEq(a, b []byte) bool {
-    if len(a) != len(b) {
-        return false
-    }
-    for i := range a {
-        if a[i] != b[i] {
-            return false
-        }
-    }
-    return true
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
