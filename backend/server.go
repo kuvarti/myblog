@@ -59,8 +59,9 @@ func main() {
 
 	db := mongoClient.Database("KuvartiBlog");
 	defer db.Client().Disconnect(ctx);
-	controllers.InitMenuController(services.NewMenuService(ctx, db.Collection("Menus")), server);
-	controllers.InitPageController(services.NewPageService(ctx, db.Collection("Pages")), server);
+	apiGroup := server.Group("api")
+	controllers.InitMenuController(services.NewMenuService(ctx, db.Collection("Menus")), apiGroup);
+	controllers.InitPageController(services.NewPageService(ctx, db.Collection("Pages")), apiGroup);
 
 	server.Run()
 }

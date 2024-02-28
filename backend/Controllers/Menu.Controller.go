@@ -12,7 +12,7 @@ type MenuController struct {
 	MenuService services.MenuService
 }
 
-func InitMenuController(MenuService services.MenuService, server *gin.Engine) MenuController {
+func InitMenuController(MenuService services.MenuService, server *gin.RouterGroup) MenuController {
 	group := server.Group("/MenuList")
 	mc := MenuController{
 		MenuService: MenuService,

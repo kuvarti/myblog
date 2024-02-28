@@ -11,7 +11,7 @@ type PageController struct {
 	PageService services.PageService
 }
 
-func InitPageController(PageService services.PageService, server *gin.Engine) PageController {
+func InitPageController(PageService services.PageService, server *gin.RouterGroup) PageController {
 	pc := PageController{
 		PageService: PageService,
 	}
