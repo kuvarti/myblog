@@ -54,14 +54,20 @@ func InitServer() *gin.Engine {
 	return server
 }
 
+func InitControllers(db *mongo.Database, apiGroup *gin.RouterGroup) {
+	userService, TokenService := services.NewUserService(ctx, db.Collection("Users"))
+
+	controllers.InitUserController(userService, TokenService, *apiGroup.Group("ControlPanel"));
+	controllers.InitMenuController(services.NewMenuService(ctx, db.Collection("Menus")), apiGroup);
+	controllers.InitPageController(services.NewPageService(ctx, db.Collection("Pages")), apiGroup);
+}
+
 func main() {
 	server = InitServer()
 
 	db := mongoClient.Database("KuvartiBlog");
 	defer db.Client().Disconnect(ctx);
 	apiGroup := server.Group("api")
-	controllers.InitMenuController(services.NewMenuService(ctx, db.Collection("Menus")), apiGroup);
-	controllers.InitPageController(services.NewPageService(ctx, db.Collection("Pages")), apiGroup);
-
+	InitControllers(db, apiGroup)
 	server.Run()
 }
