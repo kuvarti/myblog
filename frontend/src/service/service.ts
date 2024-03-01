@@ -2,16 +2,18 @@ import axios, { type AxiosInstance } from "axios";
 import { type MenuListModal } from '@/types/MenuListModal'
 import { type PageResponseModal } from '@/types/PageResponseModal'
 
-class serviceClass{
-	private apiClient:AxiosInstance;
-	constructor() {
+export class serviceClass{
+	protected apiClient:AxiosInstance;
+	private userToken: string;
+	constructor(path: string = "") {
 		this.apiClient = axios.create({
-			baseURL: 'http://localhost:8080/api',
+			baseURL: 'http://localhost:8080/api' + path,
 			headers: {
 				Accept: 'application/json',
 				"Content-type": "application/json"
 			}
 		});
+		this.userToken = "";
 	}
 	public async getMenu() : Promise<Array<MenuListModal>> {
 		return new Promise((resolve) => {
@@ -44,4 +46,5 @@ class serviceClass{
 };
 
 export type ServiceType = serviceClass | undefined | null;
+export type serviceClassImpl = serviceClass;
 export default new serviceClass();

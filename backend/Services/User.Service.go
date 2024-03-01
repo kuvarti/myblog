@@ -32,10 +32,10 @@ func (usi *UserServiceImplementation) Login(uName string, uPass string) error {
 	var User models.UserModel
 	querry := bson.D{bson.E{Key: "Username", Value: uName}};
 	if err := usi.collection.FindOne(usi.ctx, querry).Decode(&User); err != nil {
-		return errors.New("Invalid Username and Password")
+		return errors.New("invalid Username and Password")
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(User.Password), []byte(uPass)); err != nil {
-		return errors.New("Invalid Username and Password")
+		return errors.New("invalid Username and Password")
 	}
 	return nil
 }

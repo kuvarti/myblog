@@ -3,11 +3,11 @@
 		<div id="menu" class="py-8 pl-8 w-3/4 h-3/4">
 			<div v-if="MenuList.length > 0"  class="flex flex-col">
 				<div v-for="items in MenuList" :key="items.Name">
-					<MenuItem :Path="items.Path" :Name="items.Name" :Caption="items.Caption"/>
+					<MenuItem :Path="items.Path" :Name="items.Name" :Caption="items.Caption" :PageName="items.PageName"/>
 				</div>
 			</div>
 			<div v-else>
-				<MenuItem Path="/" Name="contents" Caption="Ana Sayfa" />
+				<MenuItem Path="/" Name="contents" Caption="Ana Sayfa"  PageName=""/>
 			</div>
 		</div>
 		<div id="iconBar" :class="IconBarClass" class="flex justify-center items-center">

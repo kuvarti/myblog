@@ -12,7 +12,12 @@ const router = createRouter({
 		{
 			path:'/lists',
 			name: 'lists',
-			component: () =>Promise.resolve(routes.lists)
+			component: () => Promise.resolve(routes.lists)
+		},
+		{
+			path: '/panel',
+			name: 'panel',
+			component: () => Promise.resolve(routes.panel)
 		}
 	]
 })
