@@ -24,7 +24,7 @@
 import * as routes from '@/router/routes'
 import { useStore } from 'vuex';
 import { onMounted, provide } from 'vue'
-import serviceClass from '@/service/service'
+import serviceClass from '@/service/BaseAPI.service'
 provide('Service', serviceClass);
 
 let GlobalStore = useStore();
@@ -38,3 +38,4 @@ onMounted(() => {
 	GlobalStore.dispatch('SetActivePage', "MainPage");
 })
 </script>
+@/service/BaseAPI.service

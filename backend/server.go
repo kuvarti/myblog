@@ -38,7 +38,7 @@ func InitServer() *gin.Engine {
 	server.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		AllowOriginFunc: func(origin string) bool {
@@ -57,7 +57,7 @@ func InitServer() *gin.Engine {
 func InitControllers(db *mongo.Database, apiGroup *gin.RouterGroup) {
 	userService, TokenService := services.NewUserService(ctx, db.Collection("Users"))
 
-	controllers.InitUserController(userService, TokenService, *apiGroup.Group("ControlPanel"));
+	controllers.InitUserController(userService, TokenService, apiGroup);
 	controllers.InitMenuController(services.NewMenuService(ctx, db.Collection("Menus")), apiGroup);
 	controllers.InitPageController(services.NewPageService(ctx, db.Collection("Pages")), apiGroup);
 }

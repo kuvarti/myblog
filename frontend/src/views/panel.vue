@@ -9,7 +9,7 @@
 
 <script async setup lang="ts">
 import * as panelView from "@/components/panelViews"
-import UserService, { type UserServiceType } from "@/service/user.service"
+import UserService, { type UserServiceType } from "@/service/User.service"
 import { computed, provide } from "vue";
 provide<UserServiceType>("UserService", UserService)
 

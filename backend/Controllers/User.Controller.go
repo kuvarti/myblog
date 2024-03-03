@@ -13,16 +13,20 @@ type UserController struct {
 	UserService services.UserService
 }
 
-func InitUserController(UserService services.UserService, TokenService services.TokenService, server gin.RouterGroup) UserController {
+func InitUserController(UserService services.UserService, TokenService services.TokenService, server *gin.RouterGroup) UserController {
 	uc := UserController {
 		UserService: UserService,
 		TokenService: TokenService,
 	}
-	newGroup := server.Group("/auth")
-	newGroup.POST("/login", uc.Login)
-	newGroup.Use(uc.TokenService.AuthenticateJWT())
+	authGroup := server.Group("/auth")
+	controlpanel := authGroup.Group("ControlPanel");
+	authGroup.POST("/login", uc.Login)
+	authGroup.Use(uc.TokenService.AuthenticateJWT())
 	{
-		newGroup.GET("/AmIAuth", uc.Authc)
+		authGroup.GET("/AmIAuth", uc.Authc)
+	}
+	controlpanel.Use(uc.TokenService.AuthenticateJWT())
+	{
 	}
 	return uc
 }

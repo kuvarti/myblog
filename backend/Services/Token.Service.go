@@ -58,7 +58,7 @@ func (ts *TokenServiceImplementation) AuthenticateJWT() gin.HandlerFunc {
 			return secretKey, nil
 		})
 
-		if err != nil && !token.Valid {
+		if err != nil || !token.Valid {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			return
 		}
