@@ -7,6 +7,7 @@ import router from './router'
 import vuex from '@/global/store'
 import icons from '@/global/vueIcons'
 import PrimeVue from 'primevue/config';
+import 'primeicons/primeicons.css'
 
 
 const app = createApp(App)

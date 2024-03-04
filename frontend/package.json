@@ -18,8 +18,11 @@
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "oh-vue-icons": "^1.0.0-rc3",
+    "primeicons": "^6.0.1",
     "primevue": "^3.49.1",
     "process": "^0.11.10",
+    "sass": "^1.71.1",
+    "sass-loader": "^14.1.1",
     "vue": "^3.3.4",
     "vue-router": "^4.2.2",
     "vuex": "^4.1.0"

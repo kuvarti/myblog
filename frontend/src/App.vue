@@ -6,14 +6,14 @@
 		</suspense>
 	</teleport>
 	<div id="content-grid" class="flex h-screen" :class="GlobalStore.getters.GetIsMobile ? 'flex-col mt-8' : 'flex-row  ml-8'">
-		<routes.viewProfile v-if="GlobalStore.getters.GetIsMobile" class="bg-midnightPurple border-2 rounded m-4 basis-1/4" :class="GlobalStore.getters.GetIsMobile ? 'h-8' : 'h-screen'"/>
+		<routes.sidePanel v-if="GlobalStore.getters.GetIsMobile" class="bg-midnightPurple border-2 rounded m-4 basis-1/4" :class="GlobalStore.getters.GetIsMobile ? 'h-8' : 'h-screen'"/>
 		<!-- <routes.contents -->
 		<RouterView
 			class="bg-midnightPurple border-2 rounded m-4"
 			:class="GlobalStore.getters.GetIsMobile ? 'basis-full' : 'basis-3/4'"
 		>
 		</RouterView>
-		<routes.viewProfile v-if="!GlobalStore.getters.GetIsMobile" class="bg-midnightPurple border-2 rounded m-4 basis-1/4"/>
+		<routes.sidePanel v-if="!GlobalStore.getters.GetIsMobile" class="bg-midnightPurple border-2 rounded m-4 basis-1/4"/>
 	</div>
 </template>
 
