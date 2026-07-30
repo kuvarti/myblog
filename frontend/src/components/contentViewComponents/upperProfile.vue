@@ -6,10 +6,10 @@
 		</div>
 		<div class="flex flex-col justify-around">
 			<div id="name" class="text-center align-middle">
-				<p class="text-slate-50 text-3xl font-semibold">Ahmet Eryilmaz</p>
+				<p class="text-fg text-3xl font-semibold">Ahmet Eryilmaz</p>
 			</div>
 			<div id="job" class="text-center align-middle">
-				<p class="text-slate-50 text-xl">Software Developer</p>
+				<p class="text-muted text-xl">Software Developer</p>
 			</div>
 		</div>
 	</div>

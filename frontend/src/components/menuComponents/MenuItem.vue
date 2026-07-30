@@ -2,7 +2,7 @@
 	<!-- <router-link :to="RouterRedirect"> -->
 		<div
 			:class="textColorFunction"
-			class="text-4xl my-2 ml-4 hover:ml-6 hover:cursor-pointer hover:text-activePageColor"
+			class="text-4xl my-2 ml-4 hover:ml-6 hover:cursor-pointer hover:text-accent"
 			@click="RouterRedirect"
 		>
 			{{ Caption }}

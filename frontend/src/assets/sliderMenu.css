@@ -1,9 +1,10 @@
 
 #sliding {
 	position: absolute;
-	background-color: #382D40;
+	background-color: var(--surface-2);
 	border-style: solid;
-	border-color: white;
+	border-color: var(--border);
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
 	animation-duration: 2s;
 }
 
@@ -25,12 +26,12 @@
 
 .topMenu:hover{
 	top: 0;
-	background-color: aqua;
+	background-color: var(--surface);
 }
 
 .leftMenu:hover{
 	left: 0;
-	background-color: aqua;
+	background-color: var(--surface);
 }
 
 .topIcon{
@@ -46,7 +47,7 @@
 .menuIcon{
 	width: 80%;
 	height: 80%;
-	color: white;
+	color: var(--fg);
 	padding: 0 !important;
 	margin: 0 !important;
 }

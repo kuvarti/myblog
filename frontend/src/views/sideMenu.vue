@@ -26,7 +26,7 @@
 <script async setup lang="ts">
 import { computed, inject, ref, onMounted, watchEffect } from 'vue';
 import { useStore } from 'vuex';
-import { type ServiceType } from '@/service/service'
+import { type ServiceType } from '@/service/BaseAPI.service'
 import { type MenuListModal } from '@/types/MenuListModal'
 import MenuItem from '@/components/menuComponents/MenuItem.vue'
 

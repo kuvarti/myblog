@@ -1,8 +1,6 @@
 <template>
 	<div class="py-4 pl-4 pr-4">
-		<div class="">
-			<div v-html="returnedHTML"></div>
-		</div>
+		<div class="content" v-html="returnedHTML"></div>
 	</div>
 </template>
 
@@ -15,7 +13,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, inject } from 'vue';
 import { useStore } from 'vuex';
-import { type ServiceType } from '@/service/service'
+import { type ServiceType } from '@/service/BaseAPI.service'
 
 let service:ServiceType = inject<ServiceType>('Service');
 let GlobalStore = useStore()
