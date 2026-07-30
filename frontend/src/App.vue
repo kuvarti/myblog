@@ -6,7 +6,7 @@
 		</suspense>
 	</teleport>
 	<div id="content-grid" class="flex h-screen" :class="GlobalStore.getters.GetIsMobile ? 'flex-col mt-8' : 'flex-row  ml-8'">
-		<routes.sidePanel v-if="GlobalStore.getters.GetIsMobile" class="bg-surface border-2 border-border rounded m-4 basis-1/4" :class="GlobalStore.getters.GetIsMobile ? 'h-8' : 'h-screen'"/>
+		<routes.sidePanel v-if="GlobalStore.getters.GetIsMobile" class="bg-surface border-2 border-border rounded m-4 basis-1/4" :class="GlobalStore.getters.GetIsMobile ? 'h-auto' : 'h-screen'"/>
 		<!-- <routes.contents -->
 		<RouterView
 			class="bg-surface border-2 border-border rounded m-4"
