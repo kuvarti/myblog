@@ -1,5 +1,6 @@
 backend/temp*
 backend/tmp
+/tmp/
 *deneme*
 node_modules
 __*
