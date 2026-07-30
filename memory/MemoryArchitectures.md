@@ -29,7 +29,7 @@ memory/
 │   └── commit-flow.md                — [git-commit-flow] Owner-initiated commits; ask the message theme first
 └── workflow/
     ├── verification.md               — [workflow-verification] Run tests/build and show output before claiming done
-    └── subagents.md                  — [workflow-subagents] Don't spawn unless asked; split basic vs edge-case tests when asked
+    └── subagents.md                  — [workflow-subagents] Subagents are a normal tool; skills may spawn them when warranted
 ```
 
 ## Categories
