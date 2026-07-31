@@ -1,17 +1,17 @@
 <template>
 	<div class="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-		<div class="w-full bg-gray-500 rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
+		<div class="w-full bg-surface border border-border rounded-lg shadow md:mt-0 sm:max-w-md xl:p-0">
 			<div class="p-6 space-y-4 md:space-y-6 sm:p-8">
 				<form class="space-y-4 md:space-y-6" @submit.prevent="SignIn">
 					<div>
-						<label for="user" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Username</label>
-						<InputText type="text" v-model="form.user" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="UserName" required/>
+						<label for="user" class="block mb-2 text-sm font-medium text-fg">Username</label>
+						<InputText type="text" v-model="form.user" class="bg-surface-2 border border-border text-fg sm:text-sm rounded-lg focus:ring-accent focus:border-accent block w-full p-2.5" placeholder="UserName" required/>
 					</div>
 					<div>
-						<label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
-						<InputText type="password" v-model="form.pass" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="PassWord" required/>
+						<label for="password" class="block mb-2 text-sm font-medium text-fg">Password</label>
+						<InputText type="password" v-model="form.pass" class="bg-surface-2 border border-border text-fg sm:text-sm rounded-lg focus:ring-accent focus:border-accent block w-full p-2.5" placeholder="PassWord" required/>
 					</div>
-					<Button label="Log In" severity="contrast" type="submit" class="w-full bg-gray-300 border border-gray-400 rounded hover:bg-gray-400"/>
+					<Button label="Log In" severity="contrast" type="submit" class="w-full bg-accent text-surface border border-border rounded hover:opacity-90"/>
 				</form>
 			</div>
 		</div>

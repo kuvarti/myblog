@@ -172,5 +172,4 @@ These are intentionally unfinished, not bugs — don't treat them as breakage:
 - **`ViewType` render mode.** `PageModel.ViewType` is returned by `/api/Page` and seeded with values like `"PlainHTML"`, but the frontend doesn't branch on it yet — every page renders the same way. It's the hook for per-page render modes (e.g. plain HTML vs. Markdown), not dead code; wire the frontend to it when finishing that feature.
 
 ### Known frontend gotchas
-- Several views (`contents.vue`, `sideMenu.vue`) import types from `@/service/service`, but no `service/service.ts` file exists — only `BaseAPI.service.ts`. Verify/fix these import paths if type resolution or the build fails.
 - `Models/User.Model.go` has a copy-paste bug: the `Password` field carries the json tag `"Username"`.

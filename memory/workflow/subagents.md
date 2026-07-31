@@ -1,17 +1,17 @@
 ---
 id: workflow-subagents
 category: Workflow
-title: Don't spawn subagents unless asked; how to split test work when asked
+title: Subagents are a normal tool; skills may spawn them when warranted
 status: active
 ---
 
 ## Rule
-Default: do not spawn subagents on your own initiative. Each spawn cold-starts and re-derives context that is already in hand, so it is the expensive path — run tests and builds inline in your own context instead. Spawn agents only when the owner explicitly asks.
+Subagents are a normal tool, not an owner-only escalation. When a skill or process is designed around subagents (e.g. `subagent-driven-development`) or the work genuinely benefits from parallel/isolated execution, spawn them when it is warranted — no need to ask permission each time. The owner has authorized skill-driven and process-warranted spawning.
 
-When the owner does ask to parallelize a substantial test effort, the owner's preferred split is: **one agent for basic / happy-path tests, one agent for edge cases**. Use that division. It is only worth the cold-start cost when the test effort is genuinely large.
+Still apply judgment about cost: each spawn cold-starts and re-derives context, so don't spawn for trivial work that is cheaper to do inline. When parallelizing a large test effort, a sensible split is one agent for basic / happy-path tests and one for edge cases.
 
 ## Rationale
-The owner likes the idea of parallel test agents (basic vs. edge cases) and wants that split on record — but spawning stays owner-triggered because of the cold-start cost. A recalled memory cannot by itself make spawning happen; it just captures the intended division for when the owner requests it.
+An earlier version of this memory restricted spawning to explicit owner requests. The owner decided that was a mistake — it fought against skills whose whole design is subagent-based. Subagents should be available whenever the work calls for them.
 
 ## Applies to
-All subagent usage, especially splitting test/verification work. Pairs with [[workflow-verification]].
+All subagent usage. Pairs with [[workflow-verification]].

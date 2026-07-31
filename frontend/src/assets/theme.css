@@ -1,0 +1,36 @@
+:root {
+  --bg: #F6F4FB;
+  --surface: #FDFCFF;
+  --surface-2: #EFEBF8;
+  --fg: #262036;
+  --muted: #6C6480;
+  --accent: #6A46C9;
+  --border: #E4DCF2;
+
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'Inter', system-ui, sans-serif;
+  --mono: 'Fira Code', monospace;
+}
+
+html[data-theme="dark"] {
+  --bg: #1C1726;
+  --surface: #2A2338;
+  --surface-2: #211B2E;
+  --fg: #ECE7F4;
+  --muted: #A79FB8;
+  --accent: #B3A4F5;
+  --border: #3A3350;
+}
+
+/* Default to dark when the user has expressed no explicit choice. */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) {
+    --bg: #1C1726;
+    --surface: #2A2338;
+    --surface-2: #211B2E;
+    --fg: #ECE7F4;
+    --muted: #A79FB8;
+    --accent: #B3A4F5;
+    --border: #3A3350;
+  }
+}

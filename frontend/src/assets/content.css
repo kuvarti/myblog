@@ -1,0 +1,56 @@
+.content { max-width: 65ch; margin: 0 auto; }
+
+.content h1, .content h2, .content h3, .content h4 {
+  font-family: var(--serif); font-weight: 600; color: var(--fg); line-height: 1.15;
+}
+.content h1 { font-size: 2.75rem; line-height: 1.1; letter-spacing: -.01em; margin: 0 0 .3em; }
+.content h2 { font-size: 2rem; margin: 2.4em 0 .5em; }
+.content h3 { font-size: 1.5rem; margin: 1.9em 0 .45em; }
+.content h4 { font-size: 1.25rem; margin: 1.7em 0 .4em; }
+.content h5 { font-family: var(--sans); font-size: 1.0625rem; font-weight: 700; margin: 1.6em 0 .4em; color: var(--fg); }
+.content h6 {
+  font-family: var(--sans); font-size: .875rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted); margin: 1.6em 0 .4em;
+}
+
+.content p { margin: 0 0 1.4em; }
+.content > p:first-of-type { font-size: 1.25rem; line-height: 1.6; color: var(--muted); }
+.content a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+.content a:hover { text-decoration-thickness: 2px; }
+.content strong { font-weight: 600; }
+.content em { font-style: italic; }
+.content del { color: var(--muted); }
+
+/* Tailwind Preflight removes list markers, so restore them explicitly. */
+.content ul, .content ol { margin: 0 0 1.4em; padding-left: 1.4em; }
+.content ul { list-style: disc; }
+.content ol { list-style: decimal; }
+.content ul ul { list-style: circle; }
+.content li { margin: .4em 0; }
+.content li::marker { color: var(--accent); }
+.content ul ul, .content ol ol { margin: .4em 0; }
+
+.content blockquote {
+  margin: 1.6em 0; padding: .2em 0 .2em 1.1em; border-left: 3px solid var(--accent);
+  color: var(--muted); font-style: italic;
+}
+.content blockquote blockquote { margin: .6em 0; border-left-color: var(--border); }
+
+.content code {
+  font-family: var(--mono); font-size: .9em; background: var(--surface-2);
+  padding: .15em .4em; border-radius: 5px;
+}
+.content pre {
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+  padding: 1.1em 1.3em; overflow-x: auto; margin: 0 0 1.4em; line-height: 1.6;
+}
+.content pre code { background: none; padding: 0; font-size: .9rem; }
+
+.content table { width: 100%; border-collapse: collapse; margin: 0 0 1.4em; font-size: .95rem; }
+.content th, .content td { padding: .6em .8em; text-align: left; border-bottom: 1px solid var(--border); }
+.content th { font-weight: 600; color: var(--fg); }
+.content thead th { border-bottom: 2px solid var(--border); }
+.content tbody tr:last-child td { border-bottom: none; }
+
+.content hr { border: 0; border-top: 1px solid var(--border); margin: 2.6em 0; }
+.content img { max-width: 100%; height: auto; border-radius: 10px; display: block; margin: 1.4em 0; }

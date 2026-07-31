@@ -1,5 +1,7 @@
+import './assets/theme.css'
 import './assets/main.css'
 import './assets/sliderMenu.css'
+import './assets/content.css'
 
 import { createApp } from 'vue'
 import App from './App.vue'

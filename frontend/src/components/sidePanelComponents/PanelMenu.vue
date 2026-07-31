@@ -1,9 +1,9 @@
 <template>
 	<div class="flex flex-row justify-around h-full w-full">
-		<PanelMenu :model="items" class="text-white overflow-auto w-full" v-if="IsAuth">
+		<PanelMenu :model="items" class="text-fg overflow-auto w-full" v-if="IsAuth">
 			<template #item="item">
-				<a class="flex items-center px-3 py-2 cursor-pointer border hover:bg-slate-900/50">
-					<span :class="[item.item.icon, 'text-primary-500 dark:text-primary-400']" />
+				<a class="flex items-center px-3 py-2 cursor-pointer border hover:bg-surface-2">
+					<span :class="[item.item.icon, 'text-accent']" />
 					<span :class="['ml-2', { 'font-semibold hover:bg-black': item.item.items }]">{{ item.label }}</span>
 				</a>
 			</template>
