@@ -3,7 +3,7 @@
 		<div class="flex justify-end p-3">
 			<ThemeToggle />
 		</div>
-		<contentView.viewProfileUpper class="" v-if="GlobalStore.getters.GetIsMobile"/>
+		<contentView.viewProfileUpper class="px-4 pb-4" v-if="GlobalStore.getters.GetIsMobile"/>
 		<div class="" v-if="!GlobalStore.getters.GetIsMobile">
 			<contentView.viewProfileUpper class="p-4"/>
 			<hr>

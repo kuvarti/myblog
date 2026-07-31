@@ -6,11 +6,11 @@
 		</suspense>
 	</teleport>
 	<div id="content-grid" class="flex h-screen" :class="GlobalStore.getters.GetIsMobile ? 'flex-col mt-8' : 'flex-row  ml-8'">
-		<routes.sidePanel v-if="GlobalStore.getters.GetIsMobile" class="bg-surface border-2 border-border rounded m-4 basis-1/4" :class="GlobalStore.getters.GetIsMobile ? 'h-auto' : 'h-screen'"/>
+		<routes.sidePanel v-if="GlobalStore.getters.GetIsMobile" class="bg-surface border-2 border-border rounded mx-4 mt-4 mb-2 basis-1/4 h-auto"/>
 		<!-- <routes.contents -->
 		<RouterView
-			class="bg-surface border-2 border-border rounded m-4"
-			:class="GlobalStore.getters.GetIsMobile ? 'basis-full' : 'basis-3/4'"
+			class="bg-surface border-2 border-border rounded"
+			:class="GlobalStore.getters.GetIsMobile ? 'basis-full mx-4 mt-2 mb-4' : 'basis-3/4 m-4'"
 		>
 		</RouterView>
 		<routes.sidePanel v-if="!GlobalStore.getters.GetIsMobile" class="bg-surface border-2 border-border rounded m-4 basis-1/4"/>
