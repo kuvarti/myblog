@@ -2,7 +2,7 @@ package models
 
 type UserModel struct{
 	Username string `json:"Username"`
-	Password string `json:"Username"`
+	Password string `json:"Password"`
 	UserType string `json:"UserPrivilige"`
 }
 

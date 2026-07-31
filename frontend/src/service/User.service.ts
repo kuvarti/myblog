@@ -27,9 +27,11 @@ class UserService extends serviceClass{
 			headers: {
 				"Authorization": `Bearer ${this.Token ? this.Token : "nullvalue"}`
 			}
-		}).then((value) => {
-			let response:boolean = value?.data !== "true";
-			this.IsLogin.value = response;
+		}).then(() => {
+			// Reaching here means a 2xx from /AmIAuth. That endpoint sits behind the
+			// AuthenticateJWT middleware, which aborts with 401 on a missing/invalid
+			// token, so any successful response proves the token is valid.
+			this.IsLogin.value = true;
 		}).catch(() => {
 			this.IsLogin.value = false;
 		})
