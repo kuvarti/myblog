@@ -19,14 +19,10 @@ func InitUserController(UserService services.UserService, TokenService services.
 		TokenService: TokenService,
 	}
 	authGroup := server.Group("/auth")
-	controlpanel := authGroup.Group("ControlPanel");
 	authGroup.POST("/login", uc.Login)
 	authGroup.Use(uc.TokenService.AuthenticateJWT())
 	{
 		authGroup.GET("/AmIAuth", uc.Authc)
-	}
-	controlpanel.Use(uc.TokenService.AuthenticateJWT())
-	{
 	}
 	return uc
 }

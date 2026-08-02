@@ -1,70 +1,28 @@
 <template>
-	<div class="flex flex-row justify-around h-full w-full">
-		<PanelMenu :model="items" class="text-fg overflow-auto w-full" v-if="IsAuth">
-			<template #item="item">
-				<a class="flex items-center px-3 py-2 cursor-pointer border hover:bg-surface-2">
-					<span :class="[item.item.icon, 'text-accent']" />
-					<span :class="['ml-2', { 'font-semibold hover:bg-black': item.item.items }]">{{ item.label }}</span>
-				</a>
-			</template>
-		</PanelMenu>
+	<div v-if="IsAuth" class="flex flex-col h-full w-full p-2 gap-1">
+		<button class="text-left px-3 py-2 rounded bg-accent text-surface" @click="startNew">+ New page</button>
+		<div class="flex-1 overflow-auto">
+			<button v-for="p in state.pages" :key="p.PageName"
+				class="block w-full text-left px-3 py-2 rounded hover:bg-surface-2 text-fg"
+				:class="{ 'bg-surface-2 font-semibold': state.selected?.PageName === p.PageName }"
+				@click="select(p.PageName)">
+				{{ p.PageName }}
+			</button>
+		</div>
 	</div>
 </template>
 
-<style scoped>
-.flex a {
-  padding: 10px 15px; /* Artırılmış iç boşluk */
-  font-size: 16px; /* Büyük yazı tipi boyutu */
-  height: /*75px*/100px; /* Artırılmış yükseklik */
-}
-
-.flex span {
-  font-size: 20px; /* İkon ve metin için büyük yazı tipi boyutu */
-}
-
-@media (max-width <= 1280) {
-	.flex a {
-		padding: 10px 15px; /* Artırılmış iç boşluk */
-		font-size: 16px; /* Büyük yazı tipi boyutu */
-		height: /*75px*/75px; /* Artırılmış yükseklik */
-	}
-}
-</style>
-
 <script setup lang="ts">
-import 'primeicons/primeicons.css'
-import { ref, provide } from "vue"
-import PanelMenu from 'primevue/panelmenu';
-import UserService, {type UserServiceType} from '@/service/User.service';
-import { useStore } from 'vuex';
-provide<UserServiceType>("UserService", UserService)
+import { onMounted, watch } from 'vue'
+import { usePanelState, refresh, select, startNew } from '@/global/panelState'
+import UserService from '@/service/User.service'
 
-let GlobalStore = useStore();
-let IsAuth = UserService.IsLogin;
-const items = [
-	{
-		label: 'File',
-		icon: 'pi pi-fw pi-file'
-	},
-	{
-		label: 'Edit',
-		icon: 'pi pi-fw pi-pencil'
-	},
-	{
-		label: 'File',
-		icon: 'pi pi-fw pi-file'
-	},
-	{
-		label: 'Edit',
-		icon: 'pi pi-fw pi-pencil'
-	},
-	{
-		label: 'File',
-		icon: 'pi pi-fw pi-file'
-	},
-	{
-		label: 'Edit',
-		icon: 'pi pi-fw pi-pencil'
-	},
-];
+const state = usePanelState()
+const IsAuth = UserService.IsLogin
+
+function load() {
+	if (IsAuth.value) refresh()
+}
+onMounted(load)
+watch(IsAuth, load) // refresh once the login resolves
 </script>

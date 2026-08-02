@@ -9,6 +9,7 @@ class UserService extends serviceClass{
 	private localStorage: LocalStorageService;
 	private Token: string | null;
 	public IsLogin = ref(false);
+	public AuthChecked = ref(false);
 	constructor() {
 		super("/auth")
 		this.localStorage = new LocalStorageService();
@@ -34,6 +35,8 @@ class UserService extends serviceClass{
 			this.IsLogin.value = true;
 		}).catch(() => {
 			this.IsLogin.value = false;
+		}).finally(() => {
+			this.AuthChecked.value = true;
 		})
 	}
 	public async Login(user: string, pass: string) {

@@ -6,10 +6,14 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type MenuService interface {
 	GetMenu() ([]*models.MenuModel, error)
+	Upsert(m models.MenuModel) error
+	DeleteByPageName(pageName string) error
+	GetByPageName(pageName string) (models.MenuModel, error)
 }
 
 type MenuServiceImplementation struct {
@@ -36,4 +40,33 @@ func (msi *MenuServiceImplementation) GetMenu() ([]*models.MenuModel, error) {
 		return nil, err
 	}
 	return returnMenu, nil
+}
+
+func (msi *MenuServiceImplementation) Upsert(m models.MenuModel) error {
+	if m.Name == "" {
+		m.Name = m.PageName
+	}
+	opts := options.Update().SetUpsert(true)
+	_, err := msi.collection.UpdateOne(msi.ctx,
+		bson.D{{Key: "PageName", Value: m.PageName}},
+		bson.D{{Key: "$set", Value: bson.D{
+			{Key: "Name", Value: m.Name},
+			{Key: "Caption", Value: m.Caption},
+			{Key: "Path", Value: m.Path},
+			{Key: "PageName", Value: m.PageName},
+		}}},
+		opts,
+	)
+	return err
+}
+
+func (msi *MenuServiceImplementation) DeleteByPageName(pageName string) error {
+	_, err := msi.collection.DeleteMany(msi.ctx, bson.D{{Key: "PageName", Value: pageName}})
+	return err
+}
+
+func (msi *MenuServiceImplementation) GetByPageName(pageName string) (models.MenuModel, error) {
+	var m models.MenuModel
+	err := msi.collection.FindOne(msi.ctx, bson.D{{Key: "PageName", Value: pageName}}).Decode(&m)
+	return m, err
 }

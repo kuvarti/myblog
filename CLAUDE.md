@@ -126,8 +126,14 @@ All routes are under the `/api` group. Auth column = requires `Authorization: Be
 | GET | `/api/auth/AmIAuth` | Bearer | — | Token check (returns `{ "Yes": "YES" }`) |
 | GET | `/api/MenuList/Menu` | — | — | All menu items (`Menus` collection) |
 | GET | `/api/Page` | — | `?PageName=<name>` | Rendered page HTML + `ViewType` |
+| GET | `/api/auth/ControlPanel/Pages` | Bearer | — | List `[{PageName, ViewType}]` |
+| GET | `/api/auth/ControlPanel/Pages/:name` | Bearer | — | Raw source (clean newlines) + menu binding for editing |
+| POST | `/api/auth/ControlPanel/Pages` | Bearer | `{PageName, Source, ViewType, Menu?}` | Create page (+ upsert menu); `409` on duplicate |
+| PUT | `/api/auth/ControlPanel/Pages/:name` | Bearer | `{Source, ViewType, Menu?}` | Update page (+ upsert menu); PageName immutable |
+| DELETE | `/api/auth/ControlPanel/Pages/:name` | Bearer | — | Delete page (+ cascade its menu entry) |
+| POST | `/api/auth/ControlPanel/Preview` | Bearer | `{Source}` | Stateless render → `{Html}` (no DB write) |
 
-`/api/auth/ControlPanel/*` exists as a JWT-protected route group but currently registers no handlers (see WIP note below).
+The `ControlPanel` endpoints power the admin panel (`Controllers/Panel.Controller.go`). They speak **clean newlines**; the bespoke `/n` line delimiter stays backend-only, converted with `services.ToStorage` / `services.FromStorage`.
 
 ### Auth flow
 - `POST /api/auth/login` verifies credentials with bcrypt against the `Users` collection, then `TokenService.GenerateToken` issues an HS256 JWT (1-hour expiry).
@@ -147,7 +153,7 @@ On `GetPage`, the service SHA-1-hashes the raw `Page` and compares it to the sto
 - **Blank lines are dropped** (they produce no output on their own).
 - **Gotcha:** any `<` anywhere on a line switches that whole line to HTML passthrough, so a Markdown line like `a < b` or `List<T>` won't render as Markdown — keep `<` out of Markdown lines. Also, the final rendered HTML has all newlines stripped (`ReplaceAll(Text, "\n", "")`), and Markdown links open in a new tab (`HrefTargetBlank`).
 
-**Authoring a new page:** insert a `Pages` document with `PageName`, a `Page` string in the format above, and empty `Hash`/`Text` (both fill in on the first `GET /api/Page?PageName=<name>`). Add a matching `Menus` entry to surface it in the nav.
+**Authoring a new page:** the intended way is the **admin panel** (create/edit/delete + live preview, with a bound menu entry — see the `ControlPanel` endpoints and Frontend architecture). Under the hood a page is a `Pages` document with `PageName`, a `Page` string in the format above, and empty `Hash`/`Text` (both fill in on the first `GET /api/Page?PageName=<name>`), plus a matching `Menus` entry to surface it in the nav.
 
 Editing this rendering/caching logic is the trickiest part of the backend.
 
@@ -157,6 +163,7 @@ Vue 3 `<script setup>` + TypeScript, Vuex 4, Vue Router 4, PrimeVue, Tailwind (+
 
 - **Two mount points** (`index.html`): `#sidemenu` and `#app`. `App.vue` `<teleport>`s the sliding side menu into `#sidemenu`, keeping it outside the routed content grid.
 - **Routing** (`router/index.ts`): three routes — `/` → `contents`, `/lists` → `lists`, `/panel` → `panel`. View components are re-exported as a barrel in `router/routes.ts`.
+- **Admin panel** (`/panel`): `views/panel.vue` gates on `UserService.IsLogin` / `AuthChecked` — shows `LoginComponent` when signed out, else `PageEditor.vue` (plain-textarea Markdown editor + debounced live preview via `POST /Preview`, rendered into a `.content` wrapper). The teleported side panel shows `PanelMenu.vue` (page list + "New page"). Cross-component state lives in `global/panelState.ts` (a reactive singleton: `pages`, `selected`, `dirty`, `refresh`/`select`/`startNew`). `service/Panel.service.ts` extends `serviceClass` (base path `/auth/ControlPanel`), attaches the Bearer token per call, and flips `IsLogin` to false on a 401.
 - **State** (`global/store.ts`): Vuex store tracks responsive `ScreenLevel` (see `MediaEnum`), a derived `GetIsMobile` getter (`ScreenLevel < 2`), and `ActivePage`. `App.vue` dispatches `SetScreenLevel` on mount and window resize to drive the responsive layout. `ActivePage` names which backend page `contents.vue` fetches.
 - **API layer**: `service/BaseAPI.service.ts` exports a `serviceClass` (axios wrapper, base URL `http://localhost:8080/api`) and a default singleton. `App.vue` `provide()`s this singleton as `'Service'`; components `inject('Service')` it. `service/User.service.ts` extends `serviceClass` (base path `/auth`) and persists the JWT via `LocalStorage.service.ts`.
 - **Path alias**: `@/` → `src/` (configured in both `vite.config.ts` and tsconfig).
@@ -167,6 +174,5 @@ Vue 3 `<script setup>` + TypeScript, Vuex 4, Vue Router 4, PrimeVue, Tailwind (+
 
 These are intentionally unfinished, not bugs — don't treat them as breakage:
 
-- **Admin control panel.** The `/api/auth/ControlPanel` route group is wired with JWT middleware but has no handlers yet. On the frontend, the `/panel` route, `views/panel.vue`, `components/panelComponents/LoginComponent.vue`, and `components/sidePanelComponents/PanelMenu.vue` are the scaffolding for this admin/login flow, which isn't fully connected.
-- **Routing coverage.** Only `/`, `/lists`, and `/panel` have routes; several seeded menu items (`myProjects`, `communication` in `Menus.json`) point at `/` because their pages/routes don't exist yet.
+- **Routing coverage / per-page URLs.** Clicking a nav item now loads its page by `PageName` (`MenuItem` dispatches `SetActivePage`, `contents.vue` re-fetches reactively), but there are still only three routes (`/`, `/lists`, `/panel`). `ActivePage` lives in Vuex, not the URL, so a clicked page is not bookmarkable and refreshing `/` returns to the default page. Real per-page routing is a later slice.
 - **`ViewType` render mode.** `PageModel.ViewType` is returned by `/api/Page` and seeded with values like `"PlainHTML"`. It is deliberately the per-page display-mode switch: the intent is that if a page ever needs to be shown differently from the default Markdown pipeline (e.g. served as plain HTML), that page carries a distinct `ViewType` and the frontend branches on it to pick the matching render mode. The frontend doesn't branch on it yet — every page renders the same way — so it is a designed-in hook, not dead code; wire the frontend to it when a page that needs a different display type actually appears.

@@ -55,11 +55,14 @@ func InitServer() *gin.Engine {
 }
 
 func InitControllers(db *mongo.Database, apiGroup *gin.RouterGroup) {
-	userService, TokenService := services.NewUserService(ctx, db.Collection("Users"))
+	userService, tokenService := services.NewUserService(ctx, db.Collection("Users"))
+	menuService := services.NewMenuService(ctx, db.Collection("Menus"))
+	pageService := services.NewPageService(ctx, db.Collection("Pages"))
 
-	controllers.InitUserController(userService, TokenService, apiGroup);
-	controllers.InitMenuController(services.NewMenuService(ctx, db.Collection("Menus")), apiGroup);
-	controllers.InitPageController(services.NewPageService(ctx, db.Collection("Pages")), apiGroup);
+	controllers.InitUserController(userService, tokenService, apiGroup)
+	controllers.InitMenuController(menuService, apiGroup)
+	controllers.InitPageController(pageService, apiGroup)
+	controllers.InitPanelController(pageService, menuService, tokenService, apiGroup)
 }
 
 func main() {
