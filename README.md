@@ -8,3 +8,11 @@ using technologies:
 
 ---
 _This README will be changed soon!_
+
+TODO
+
+[ ] Panelde Onizleme ve text editor kisimlarinin sliderlari senkronize olsun.
+[ ] Paneldeki menude sayfalari yukari asagi kaydirarak siralama ozelligi gelecek.
+[ ] Panel Menusunde sayfalarin sag kenarinda checkbox olacak. Isaretliyse slider menude gozuken bir sayfa olacak.
+[ ] Paneldeki ViewType Text degil combobox olacak. Simdilik planlanan secenekler 'PlainHTML' 'List', 'DynamicList' olacak. daha sonra eklenebilir.
+[ ] DynamicList icin sayfalara etiket koymamiz lazim.
