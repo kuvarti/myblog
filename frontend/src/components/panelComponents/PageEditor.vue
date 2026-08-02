@@ -26,10 +26,11 @@
 			</div>
 
 			<div class="flex flex-1 gap-4 min-h-0">
-				<textarea v-model="source" @input="onInput"
+				<textarea ref="editorEl" v-model="source" @input="onInput" @scroll="onEditorScroll"
 					class="flex-1 bg-surface-2 border border-border text-fg rounded p-3 font-mono resize-none"
 					placeholder="Write Markdown here..."></textarea>
-				<div class="flex-1 overflow-auto border border-border rounded p-3">
+				<div ref="previewEl" @scroll="onPreviewScroll"
+					class="flex-1 overflow-auto border border-border rounded p-3">
 					<div class="content" v-html="previewHtml"></div>
 				</div>
 			</div>
@@ -55,10 +56,14 @@
 <script setup lang="ts">
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { usePanelState, refresh, select } from '@/global/panelState'
 import PanelService from '@/service/Panel.service'
 import type { MenuBinding } from '@/types/PanelModels'
+import {
+	splitBlocks, interpolateScroll, buildAnchorPair,
+	measureEditorTops, measurePreviewTops,
+} from '@/components/panelComponents/scrollSync'
 
 const state = usePanelState()
 const source = ref('')
@@ -67,7 +72,58 @@ const menu = ref<MenuBinding>({ Name: '', Caption: '', Path: '' })
 const confirming = ref(false)
 const error = ref('')
 
+const editorEl = ref<HTMLTextAreaElement>()
+const previewEl = ref<HTMLElement>()
+
 let debounce: ReturnType<typeof setTimeout> | undefined
+
+// --- Scroll sync: cached anchor offsets + a rAF lock against the feedback loop.
+let editorTops: number[] = [0, 0]
+let previewTops: number[] = [0, 0]
+let syncing = false
+
+function measureAnchors() {
+	const ta = editorEl.value
+	const pv = previewEl.value
+	if (!ta || !pv) return
+	const starts = splitBlocks(source.value)
+	const pair = buildAnchorPair(
+		measureEditorTops(ta, starts),
+		measurePreviewTops(pv),
+		ta.scrollHeight - ta.clientHeight,
+		pv.scrollHeight - pv.clientHeight,
+	)
+	editorTops = pair.editorTops
+	previewTops = pair.previewTops
+}
+
+function onEditorScroll() {
+	if (syncing) return
+	const ta = editorEl.value
+	const pv = previewEl.value
+	if (!ta || !pv) return
+	syncing = true
+	pv.scrollTop = interpolateScroll(editorTops, previewTops, ta.scrollTop)
+	requestAnimationFrame(() => { syncing = false })
+}
+
+function onPreviewScroll() {
+	if (syncing) return
+	const ta = editorEl.value
+	const pv = previewEl.value
+	if (!ta || !pv) return
+	syncing = true
+	ta.scrollTop = interpolateScroll(previewTops, editorTops, pv.scrollTop)
+	requestAnimationFrame(() => { syncing = false })
+}
+
+let ro: ResizeObserver | undefined
+onMounted(() => {
+	ro = new ResizeObserver(() => measureAnchors())
+	if (editorEl.value) ro.observe(editorEl.value)
+	if (previewEl.value) ro.observe(previewEl.value)
+})
+onBeforeUnmount(() => ro?.disconnect())
 
 watch(() => state.selected, (sel) => {
 	source.value = sel?.Source ?? ''
@@ -85,6 +141,12 @@ function onInput() {
 
 async function runPreview() {
 	previewHtml.value = await PanelService.preview(source.value)
+	// Measure after the new preview DOM is patched in; the panes may not exist
+	// yet on the first render (no page selected), so measureAnchors() no-ops.
+	await nextTick()
+	if (ro && editorEl.value) ro.observe(editorEl.value)
+	if (ro && previewEl.value) ro.observe(previewEl.value)
+	measureAnchors()
 }
 
 async function save() {
