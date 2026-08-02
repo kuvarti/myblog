@@ -54,3 +54,5 @@
 
 .content hr { border: 0; border-top: 1px solid var(--border); margin: 2.6em 0; }
 .content img { max-width: 100%; height: auto; border-radius: 10px; display: block; margin: 1.4em 0; }
+/* Layout paragraphs (badge/logo rows) keep their images inline so links sit side by side; `align` still controls the row's alignment. */
+.content p[align] img { display: inline-block; margin: 0 .4em 0 0; vertical-align: middle; }
