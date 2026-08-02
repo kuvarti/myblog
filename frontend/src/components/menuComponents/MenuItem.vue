@@ -13,24 +13,27 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { computed } from 'vue'
+import { useStore } from 'vuex'
 import { type MenuListModal } from '@/types/MenuListModal'
+import { isMenuItemActive } from '@/components/menuComponents/menuActive'
 import router from '@/router';
 
 let route = useRoute();
+let GlobalStore = useStore();
 let props = defineProps<MenuListModal>()
-let currentRoutePath = computed(() => route.path);
-let textColorFunction = computed(() => {
-	let propPath: string[] = props.Path?.split('/') || [];
-	let currentPath: string[] = currentRoutePath.value.split('/');
-
-	if (currentPath[1] == propPath[1])
-		return 'text-activePageColor'
-	else
-		return 'text-deActivePageColor'
-})
+let activePage = computed(() => GlobalStore.getters.GetActivePage as string);
+let textColorFunction = computed(() =>
+	isMenuItemActive(props, route.path, activePage.value)
+		? 'text-activePageColor'
+		: 'text-deActivePageColor'
+)
 
 let RouterRedirect = () => {
-
-	router.push(props.Path || '/')
+	if (props.PageName) {
+		GlobalStore.dispatch('SetActivePage', props.PageName)
+		router.push('/')
+	} else {
+		router.push(props.Path || '/')
+	}
 }
 </script>
