@@ -4,6 +4,8 @@ type PageSummary struct {
 	PageName string `json:"PageName" bson:"PageName"`
 	ViewType string `json:"ViewType" bson:"ViewType"`
 	Order    int    `json:"Order" bson:"Order"`
+	Hidden   bool   `json:"-" bson:"Hidden"`
+	Visible  bool   `json:"Visible" bson:"-"`
 }
 
 type MenuBinding struct {
@@ -38,4 +40,9 @@ type PreviewRequest struct {
 
 type ReorderRequest struct {
 	PageNames []string `json:"PageNames"`
+}
+
+type VisibilityRequest struct {
+	PageName string `json:"PageName"`
+	Visible  bool   `json:"Visible"`
 }

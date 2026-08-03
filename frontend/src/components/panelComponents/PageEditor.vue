@@ -175,7 +175,9 @@ async function save() {
 	} catch (e: any) {
 		error.value = e?.response?.status === 409
 			? 'A page with that name already exists.'
-			: 'Save failed.'
+			: e?.response?.status === 422
+				? 'That path is already used by another page.'
+				: 'Save failed.'
 	}
 }
 

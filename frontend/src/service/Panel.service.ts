@@ -56,6 +56,11 @@ class PanelService extends serviceClass {
 			.then(() => undefined)
 			.catch((e) => this.handleAuthError(e))
 	}
+	public async setVisibility(pageName: string, visible: boolean): Promise<void> {
+		return this.apiClient.put('/PageVisibility', { PageName: pageName, Visible: visible }, this.authConfig())
+			.then(() => undefined)
+			.catch((e) => this.handleAuthError(e))
+	}
 	public async preview(source: string): Promise<string> {
 		return this.apiClient.post('/Preview', { Source: source }, this.authConfig())
 			.then((r) => r.data.Html as string)

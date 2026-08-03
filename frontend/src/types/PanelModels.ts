@@ -8,6 +8,7 @@ export interface PanelPageSummary {
 	PageName: string
 	ViewType: string
 	Order: number
+	Visible: boolean
 }
 
 export interface PanelPageDetail {

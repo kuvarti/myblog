@@ -29,8 +29,10 @@ import { useStore } from 'vuex';
 import { type ServiceType } from '@/service/BaseAPI.service'
 import { type MenuListModal } from '@/types/MenuListModal'
 import MenuItem from '@/components/menuComponents/MenuItem.vue'
+import { useMenuVersion } from '@/global/menuRefresh'
 
 let service:ServiceType = inject<ServiceType>('Service');
+let menuVersion = useMenuVersion();
 
 let GlobalStore = useStore();
 let ActiveClass = computed(() => { return GlobalStore.getters.GetScreenLevel < 2 ? 'topMenu flex-col' : 'leftMenu flex-row'; })
@@ -48,6 +50,7 @@ async function getData() {
 
 onMounted(() => {
 	watchEffect(async () => {
+		menuVersion.value; // reactive dep: bumped by refreshMenu() → refetch
 		MenuList.value = await service?.getMenu() || [];
 	});
 });

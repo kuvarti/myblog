@@ -15,6 +15,7 @@
 		</RouterView>
 		<routes.sidePanel v-if="!GlobalStore.getters.GetIsMobile" class="bg-surface border-2 border-border rounded m-4 basis-1/4"/>
 	</div>
+	<AppToast />
 </template>
 
 <style scoped>
@@ -26,6 +27,7 @@ import { useStore } from 'vuex';
 import { onMounted, provide } from 'vue'
 import serviceClass from '@/service/BaseAPI.service'
 import { HOME_PAGE } from '@/global/constants'
+import AppToast from '@/components/AppToast.vue'
 provide('Service', serviceClass);
 
 let GlobalStore = useStore();

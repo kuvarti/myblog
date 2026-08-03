@@ -7,4 +7,5 @@ type PageModel struct {
 	Text		string	`json:"Text"`
 	ViewType	string	`json:"ViewType"`
 	Order		int	`json:"Order"`
+	Hidden		bool	`json:"-" bson:"Hidden"`
 }

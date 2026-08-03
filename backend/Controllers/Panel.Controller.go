@@ -25,6 +25,7 @@ func InitPanelController(pageService services.PageService, menuService services.
 		cp.PUT("/Pages/:name", pc.UpdatePage)
 		cp.DELETE("/Pages/:name", pc.DeletePage)
 		cp.PUT("/PageOrder", pc.ReorderPages)
+		cp.PUT("/PageVisibility", pc.SetPageVisibility)
 		cp.POST("/Preview", pc.Preview)
 	}
 	return pc
@@ -67,6 +68,17 @@ func (pc *PanelController) CreatePage(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "PageName and Source are required"})
 		return
 	}
+	if req.Menu != nil && req.Menu.Path != "" {
+		taken, err := pc.MenuService.PathTakenByOther(req.Menu.Path, req.PageName)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if taken {
+			ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "path already used by another page"})
+			return
+		}
+	}
 	if err := pc.PageService.Create(req.PageName, req.Source, req.ViewType); err != nil {
 		if errors.Is(err, services.ErrPageExists) {
 			ctx.JSON(http.StatusConflict, gin.H{"error": "a page with that name already exists"})
@@ -95,6 +107,17 @@ func (pc *PanelController) UpdatePage(ctx *gin.Context) {
 	if req.Source == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Source is required"})
 		return
+	}
+	if req.Menu != nil && req.Menu.Path != "" {
+		taken, err := pc.MenuService.PathTakenByOther(req.Menu.Path, name)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if taken {
+			ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "path already used by another page"})
+			return
+		}
 	}
 	if err := pc.PageService.Update(name, req.Source, req.ViewType); err != nil {
 		if errors.Is(err, services.ErrPageNotFound) {
@@ -142,6 +165,23 @@ func (pc *PanelController) ReorderPages(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "reordered"})
+}
+
+func (pc *PanelController) SetPageVisibility(ctx *gin.Context) {
+	var req models.VisibilityRequest
+	if err := ctx.BindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := pc.PageService.SetVisibility(req.PageName, req.Visible); err != nil {
+		if errors.Is(err, services.ErrPageNotFound) {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "page not found"})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "updated"})
 }
 
 func (pc *PanelController) Preview(ctx *gin.Context) {

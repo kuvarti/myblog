@@ -31,6 +31,7 @@ type PageService interface {
 	Update(name, sourceClean, viewType string) error
 	Delete(name string) error
 	SetOrder(names []string) error
+	SetVisibility(name string, visible bool) error
 }
 
 // ToStorage encodes clean newlines into the bespoke "/n" line delimiter used in
@@ -83,6 +84,7 @@ func (psi *PageServiceImplementation) List() ([]models.PageSummary, error) {
 		{Key: "PageName", Value: 1},
 		{Key: "ViewType", Value: 1},
 		{Key: "Order", Value: 1},
+		{Key: "Hidden", Value: 1},
 	}).SetSort(bson.D{{Key: "Order", Value: 1}})
 	cursor, err := psi.collection.Find(psi.ctx, bson.D{{}}, opts)
 	if err != nil {
@@ -92,6 +94,9 @@ func (psi *PageServiceImplementation) List() ([]models.PageSummary, error) {
 	var summaries []models.PageSummary
 	if err := cursor.All(psi.ctx, &summaries); err != nil {
 		return nil, err
+	}
+	for i := range summaries {
+		summaries[i].Visible = !summaries[i].Hidden
 	}
 	return summaries, nil
 }
@@ -126,6 +131,7 @@ func (psi *PageServiceImplementation) Create(name, sourceClean, viewType string)
 		{Key: "Text", Value: ""},
 		{Key: "ViewType", Value: viewType},
 		{Key: "Order", Value: total},
+		{Key: "Hidden", Value: false},
 	})
 	return err
 }
@@ -142,6 +148,22 @@ func (psi *PageServiceImplementation) SetOrder(names []string) error {
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// SetVisibility flips a page's Hidden flag. Storage is inverted (Hidden), so a
+// visible page is Hidden:false; a missing field also reads as visible.
+func (psi *PageServiceImplementation) SetVisibility(name string, visible bool) error {
+	res, err := psi.collection.UpdateOne(psi.ctx,
+		bson.D{{Key: "PageName", Value: name}},
+		bson.D{{Key: "$set", Value: bson.D{{Key: "Hidden", Value: !visible}}}},
+	)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
+		return ErrPageNotFound
 	}
 	return nil
 }

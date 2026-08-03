@@ -4,7 +4,6 @@ import (
 	models "backend/Models"
 	services "backend/Services"
 	"net/http"
-	"sort"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,28 +29,45 @@ func (mc *MenuController) GetMenu(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
 		return
 	}
-	// Order lives on the page (single source of truth); sort the nav by it.
-	orderMap := map[string]int{}
-	if summaries, err := mc.PageService.List(); err == nil {
-		for _, s := range summaries {
-			orderMap[s.PageName] = s.Order
-		}
+	// The page is the source of truth for nav membership/order/visibility; the
+	// menu docs only supply display captions/paths. If the page list is
+	// unavailable, fall back to returning the raw menus.
+	pages, err := mc.PageService.List()
+	if err != nil {
+		ctx.JSON(http.StatusOK, menus)
+		return
 	}
-	ctx.JSON(http.StatusOK, sortMenusByOrder(menus, orderMap))
+	ctx.JSON(http.StatusOK, buildNav(pages, menus))
 }
 
-// sortMenusByOrder stably sorts menu entries by their page's Order. Entries whose
-// page is absent from the map sort last, keeping their relative order.
-func sortMenusByOrder(menus []*models.MenuModel, orderMap map[string]int) []*models.MenuModel {
-	const last = int(^uint(0) >> 1) // max int
-	order := func(m *models.MenuModel) int {
-		if o, ok := orderMap[m.PageName]; ok {
-			return o
+// buildNav produces the public navigation from the pages (the source of truth
+// for membership, order, and visibility) joined to their menu documents for
+// display captions/paths. Pages arrive already Order-sorted from
+// PageService.List(). A visible page with no menu document falls back to its
+// PageName as the caption; menu documents with no matching page (hand-seeded
+// stubs) are dropped.
+func buildNav(pages []models.PageSummary, menus []*models.MenuModel) []*models.MenuModel {
+	byPage := make(map[string]*models.MenuModel, len(menus))
+	for _, m := range menus {
+		if m.PageName != "" {
+			byPage[m.PageName] = m
 		}
-		return last
 	}
-	sort.SliceStable(menus, func(i, j int) bool {
-		return order(menus[i]) < order(menus[j])
-	})
-	return menus
+	nav := make([]*models.MenuModel, 0, len(pages))
+	for _, p := range pages {
+		if !p.Visible {
+			continue
+		}
+		if m, ok := byPage[p.PageName]; ok {
+			nav = append(nav, m)
+		} else {
+			nav = append(nav, &models.MenuModel{
+				Name:     p.PageName,
+				Caption:  p.PageName,
+				Path:     "",
+				PageName: p.PageName,
+			})
+		}
+	}
+	return nav
 }

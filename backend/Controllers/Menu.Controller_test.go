@@ -5,55 +5,62 @@ import (
 	"testing"
 )
 
-func names(menus []*models.MenuModel) []string {
-	out := make([]string, len(menus))
-	for i, m := range menus {
-		out[i] = m.PageName
+func TestBuildNavFiltersHidden(t *testing.T) {
+	pages := []models.PageSummary{
+		{PageName: "A", Visible: true},
+		{PageName: "B", Visible: false},
+		{PageName: "C", Visible: true},
 	}
-	return out
+	nav := buildNav(pages, nil)
+	if len(nav) != 2 {
+		t.Fatalf("expected 2 visible entries, got %d", len(nav))
+	}
+	if nav[0].PageName != "A" || nav[1].PageName != "C" {
+		t.Fatalf("expected A,C got %s,%s", nav[0].PageName, nav[1].PageName)
+	}
 }
 
-func equal(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
+func TestBuildNavDropsStubs(t *testing.T) {
+	pages := []models.PageSummary{{PageName: "A", Visible: true}}
+	menus := []*models.MenuModel{
+		{PageName: "A", Caption: "Alpha"},
+		{PageName: "", Caption: "Stub", Path: "/lists"}, // page-less seed stub
 	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
+	nav := buildNav(pages, menus)
+	if len(nav) != 1 || nav[0].PageName != "A" {
+		t.Fatalf("expected only page A, got %d entries", len(nav))
+	}
+}
+
+func TestBuildNavCaptionFallback(t *testing.T) {
+	pages := []models.PageSummary{{PageName: "Solo", Visible: true}}
+	nav := buildNav(pages, nil)
+	if len(nav) != 1 || nav[0].Caption != "Solo" {
+		t.Fatalf("expected caption fallback 'Solo', got %+v", nav)
+	}
+}
+
+func TestBuildNavKeepsMenuCaption(t *testing.T) {
+	pages := []models.PageSummary{{PageName: "A", Visible: true}}
+	menus := []*models.MenuModel{{PageName: "A", Caption: "Alpha", Path: "/a"}}
+	nav := buildNav(pages, menus)
+	if nav[0].Caption != "Alpha" || nav[0].Path != "/a" {
+		t.Fatalf("expected menu caption/path, got %+v", nav[0])
+	}
+}
+
+func TestBuildNavPreservesOrder(t *testing.T) {
+	pages := []models.PageSummary{
+		{PageName: "First", Visible: true},
+		{PageName: "Second", Visible: true},
+		{PageName: "Third", Visible: true},
+	}
+	nav := buildNav(pages, nil)
+	got := []string{nav[0].PageName, nav[1].PageName, nav[2].PageName}
+	want := []string{"First", "Second", "Third"}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("order mismatch at %d: got %v want %v", i, got, want)
 		}
-	}
-	return true
-}
-
-func TestSortMenusByOrder(t *testing.T) {
-	menus := []*models.MenuModel{
-		{PageName: "a"}, {PageName: "b"}, {PageName: "c"},
-	}
-	got := names(sortMenusByOrder(menus, map[string]int{"a": 2, "b": 0, "c": 1}))
-	if want := []string{"b", "c", "a"}; !equal(got, want) {
-		t.Fatalf("ordered: got %v want %v", got, want)
-	}
-}
-
-func TestSortMenusMissingSortLast(t *testing.T) {
-	// "x" and "z" have no page order; they must sort after ordered entries and
-	// keep their relative order.
-	menus := []*models.MenuModel{
-		{PageName: "x"}, {PageName: "a"}, {PageName: "z"}, {PageName: "b"},
-	}
-	got := names(sortMenusByOrder(menus, map[string]int{"a": 0, "b": 1}))
-	if want := []string{"a", "b", "x", "z"}; !equal(got, want) {
-		t.Fatalf("missing-last: got %v want %v", got, want)
-	}
-}
-
-func TestSortMenusStableTies(t *testing.T) {
-	// Equal orders preserve input order.
-	menus := []*models.MenuModel{
-		{PageName: "a"}, {PageName: "b"}, {PageName: "c"},
-	}
-	got := names(sortMenusByOrder(menus, map[string]int{"a": 0, "b": 0, "c": 0}))
-	if want := []string{"a", "b", "c"}; !equal(got, want) {
-		t.Fatalf("stable-ties: got %v want %v", got, want)
 	}
 }
