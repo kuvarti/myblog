@@ -30,6 +30,7 @@ type PageService interface {
 	Create(name, sourceClean, viewType string) error
 	Update(name, sourceClean, viewType string) error
 	Delete(name string) error
+	SetOrder(names []string) error
 }
 
 // ToStorage encodes clean newlines into the bespoke "/n" line delimiter used in
@@ -81,7 +82,8 @@ func (psi *PageServiceImplementation) List() ([]models.PageSummary, error) {
 	opts := options.Find().SetProjection(bson.D{
 		{Key: "PageName", Value: 1},
 		{Key: "ViewType", Value: 1},
-	})
+		{Key: "Order", Value: 1},
+	}).SetSort(bson.D{{Key: "Order", Value: 1}})
 	cursor, err := psi.collection.Find(psi.ctx, bson.D{{}}, opts)
 	if err != nil {
 		return nil, err
@@ -111,14 +113,37 @@ func (psi *PageServiceImplementation) Create(name, sourceClean, viewType string)
 	if count > 0 {
 		return ErrPageExists
 	}
+	// Append the new page after existing ones so it doesn't jump to the top of
+	// the (Order-sorted) list.
+	total, err := psi.collection.CountDocuments(psi.ctx, bson.D{{}})
+	if err != nil {
+		return err
+	}
 	_, err = psi.collection.InsertOne(psi.ctx, bson.D{
 		{Key: "PageName", Value: name},
 		{Key: "Page", Value: ToStorage(sourceClean)},
 		{Key: "Hash", Value: []byte{}},
 		{Key: "Text", Value: ""},
 		{Key: "ViewType", Value: viewType},
+		{Key: "Order", Value: total},
 	})
 	return err
+}
+
+// SetOrder rewrites each named page's Order to its position in the slice, so the
+// list (and the Order-sorted public menu) follow the given sequence. Names not
+// found are skipped.
+func (psi *PageServiceImplementation) SetOrder(names []string) error {
+	for i, name := range names {
+		_, err := psi.collection.UpdateOne(psi.ctx,
+			bson.D{{Key: "PageName", Value: name}},
+			bson.D{{Key: "$set", Value: bson.D{{Key: "Order", Value: i}}}},
+		)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (psi *PageServiceImplementation) Update(name, sourceClean, viewType string) error {

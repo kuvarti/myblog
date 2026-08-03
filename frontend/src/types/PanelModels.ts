@@ -7,6 +7,7 @@ export interface MenuBinding {
 export interface PanelPageSummary {
 	PageName: string
 	ViewType: string
+	Order: number
 }
 
 export interface PanelPageDetail {

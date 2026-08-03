@@ -24,6 +24,7 @@ func InitPanelController(pageService services.PageService, menuService services.
 		cp.POST("/Pages", pc.CreatePage)
 		cp.PUT("/Pages/:name", pc.UpdatePage)
 		cp.DELETE("/Pages/:name", pc.DeletePage)
+		cp.PUT("/PageOrder", pc.ReorderPages)
 		cp.POST("/Preview", pc.Preview)
 	}
 	return pc
@@ -128,6 +129,19 @@ func (pc *PanelController) DeletePage(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "deleted"})
+}
+
+func (pc *PanelController) ReorderPages(ctx *gin.Context) {
+	var req models.ReorderRequest
+	if err := ctx.BindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := pc.PageService.SetOrder(req.PageNames); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "reordered"})
 }
 
 func (pc *PanelController) Preview(ctx *gin.Context) {

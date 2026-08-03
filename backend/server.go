@@ -60,7 +60,7 @@ func InitControllers(db *mongo.Database, apiGroup *gin.RouterGroup) {
 	pageService := services.NewPageService(ctx, db.Collection("Pages"))
 
 	controllers.InitUserController(userService, tokenService, apiGroup)
-	controllers.InitMenuController(menuService, apiGroup)
+	controllers.InitMenuController(menuService, pageService, apiGroup)
 	controllers.InitPageController(pageService, apiGroup)
 	controllers.InitPanelController(pageService, menuService, tokenService, apiGroup)
 }

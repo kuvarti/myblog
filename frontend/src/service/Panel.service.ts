@@ -51,6 +51,11 @@ class PanelService extends serviceClass {
 			.then(() => undefined)
 			.catch((e) => this.handleAuthError(e))
 	}
+	public async reorderPages(pageNames: string[]): Promise<void> {
+		return this.apiClient.put('/PageOrder', { PageNames: pageNames }, this.authConfig())
+			.then(() => undefined)
+			.catch((e) => this.handleAuthError(e))
+	}
 	public async preview(source: string): Promise<string> {
 		return this.apiClient.post('/Preview', { Source: source }, this.authConfig())
 			.then((r) => r.data.Html as string)

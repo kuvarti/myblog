@@ -3,6 +3,7 @@ package models
 type PageSummary struct {
 	PageName string `json:"PageName" bson:"PageName"`
 	ViewType string `json:"ViewType" bson:"ViewType"`
+	Order    int    `json:"Order" bson:"Order"`
 }
 
 type MenuBinding struct {
@@ -33,4 +34,8 @@ type UpdatePageRequest struct {
 
 type PreviewRequest struct {
 	Source string `json:"Source"`
+}
+
+type ReorderRequest struct {
+	PageNames []string `json:"PageNames"`
 }

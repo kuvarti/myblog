@@ -6,4 +6,5 @@ type PageModel struct {
 	Hash		[]byte	`json:"Hash"`
 	Text		string	`json:"Text"`
 	ViewType	string	`json:"ViewType"`
+	Order		int	`json:"Order"`
 }
