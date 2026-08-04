@@ -28,8 +28,10 @@ type PageService interface {
 	Preview(sourceClean string) (string, error)
 	List() ([]models.PageSummary, error)
 	GetRaw(name string) (models.PageModel, error)
-	Create(name, path, sourceClean, viewType string) error
-	Update(name, path, sourceClean, viewType string) error
+	Create(w models.PageWrite) error
+	Update(name string, w models.PageWrite) error
+	GetRawByPath(path string) (models.PageModel, error)
+	FindByTags(tags []string) ([]models.PageModel, error)
 	Delete(name string) error
 	SetOrder(names []string) error
 	SetVisibility(name string, visible bool) error
@@ -113,31 +115,61 @@ func (psi *PageServiceImplementation) GetRaw(name string) (models.PageModel, err
 	return page, nil
 }
 
-func (psi *PageServiceImplementation) Create(name, path, sourceClean, viewType string) error {
-	count, err := psi.collection.CountDocuments(psi.ctx, bson.D{{Key: "PageName", Value: name}})
+func (psi *PageServiceImplementation) Create(w models.PageWrite) error {
+	count, err := psi.collection.CountDocuments(psi.ctx, bson.D{{Key: "PageName", Value: w.PageName}})
 	if err != nil {
 		return err
 	}
 	if count > 0 {
 		return ErrPageExists
 	}
-	// Append the new page after existing ones so it doesn't jump to the top of
-	// the (Order-sorted) list.
 	total, err := psi.collection.CountDocuments(psi.ctx, bson.D{{}})
 	if err != nil {
 		return err
 	}
 	_, err = psi.collection.InsertOne(psi.ctx, bson.D{
-		{Key: "PageName", Value: name},
-		{Key: "Path", Value: path},
-		{Key: "Page", Value: ToStorage(sourceClean)},
+		{Key: "PageName", Value: w.PageName},
+		{Key: "Path", Value: w.Path},
+		{Key: "Page", Value: ToStorage(w.Source)},
 		{Key: "Hash", Value: []byte{}},
 		{Key: "Text", Value: ""},
-		{Key: "ViewType", Value: viewType},
+		{Key: "ViewType", Value: w.ViewType},
 		{Key: "Order", Value: total},
 		{Key: "Hidden", Value: false},
+		{Key: "Tags", Value: w.Tags},
+		{Key: "Summary", Value: w.Summary},
+		{Key: "Image", Value: w.Image},
+		{Key: "ListTags", Value: w.ListTags},
 	})
 	return err
+}
+
+// GetRawByPath fetches a page by Path without rendering/caching — used to read
+// card metadata off a referenced page.
+func (psi *PageServiceImplementation) GetRawByPath(path string) (models.PageModel, error) {
+	var page models.PageModel
+	err := psi.collection.FindOne(psi.ctx, bson.D{{Key: "Path", Value: path}}).Decode(&page)
+	return page, err
+}
+
+// FindByTags returns candidate pages whose Tags intersect tags (Mongo $in),
+// Order-sorted, raw (source included). Authoritative membership is selectByTags.
+func (psi *PageServiceImplementation) FindByTags(tags []string) ([]models.PageModel, error) {
+	if len(tags) == 0 {
+		return nil, nil
+	}
+	opts := options.Find().SetSort(bson.D{{Key: "Order", Value: 1}})
+	cursor, err := psi.collection.Find(psi.ctx,
+		bson.D{{Key: "Tags", Value: bson.D{{Key: "$in", Value: tags}}}}, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(psi.ctx)
+	var pages []models.PageModel
+	if err := cursor.All(psi.ctx, &pages); err != nil {
+		return nil, err
+	}
+	return pages, nil
 }
 
 // PathTaken reports whether some other page already owns this path. The current
@@ -182,15 +214,19 @@ func (psi *PageServiceImplementation) SetVisibility(name string, visible bool) e
 	return nil
 }
 
-func (psi *PageServiceImplementation) Update(name, path, sourceClean, viewType string) error {
+func (psi *PageServiceImplementation) Update(name string, w models.PageWrite) error {
 	res, err := psi.collection.UpdateOne(psi.ctx,
 		bson.D{{Key: "PageName", Value: name}},
 		bson.D{{Key: "$set", Value: bson.D{
-			{Key: "Path", Value: path},
-			{Key: "Page", Value: ToStorage(sourceClean)},
-			{Key: "ViewType", Value: viewType},
+			{Key: "Path", Value: w.Path},
+			{Key: "Page", Value: ToStorage(w.Source)},
+			{Key: "ViewType", Value: w.ViewType},
 			{Key: "Hash", Value: []byte{}},
 			{Key: "Text", Value: ""},
+			{Key: "Tags", Value: w.Tags},
+			{Key: "Summary", Value: w.Summary},
+			{Key: "Image", Value: w.Image},
+			{Key: "ListTags", Value: w.ListTags},
 		}}},
 	)
 	if err != nil {

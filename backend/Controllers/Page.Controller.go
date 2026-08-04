@@ -10,12 +10,11 @@ import (
 
 type PageController struct {
 	PageService services.PageService
+	CardService services.CardService
 }
 
-func InitPageController(PageService services.PageService, server *gin.RouterGroup) PageController {
-	pc := PageController{
-		PageService: PageService,
-	}
+func InitPageController(PageService services.PageService, CardService services.CardService, server *gin.RouterGroup) PageController {
+	pc := PageController{PageService: PageService, CardService: CardService}
 	server.GET("/Page", pc.GetPage)
 	return pc
 }
@@ -40,8 +39,12 @@ func (pc *PageController) GetPage(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
 		return
 	}
+	final := respons.Text
+	if expanded, exErr := pc.CardService.ExpandCards(respons.Text, respons); exErr == nil {
+		final = expanded
+	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"ViewType": respons.ViewType,
-		"Page":     respons.Text,
+		"Page":     final,
 	})
 }

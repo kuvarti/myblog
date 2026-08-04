@@ -1,6 +1,6 @@
 <template>
 	<div class="py-4 pl-4 pr-4">
-		<div class="content" v-html="returnedHTML"></div>
+		<div class="content" v-html="returnedHTML" @click="onContentClick"></div>
 	</div>
 </template>
 
@@ -12,11 +12,13 @@
 
 <script setup lang="ts">
 import { onMounted, ref, inject, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { type ServiceType } from '@/service/BaseAPI.service'
+import { interceptNavTarget } from '@/components/contentLinks'
 
 let service:ServiceType = inject<ServiceType>('Service');
 let route = useRoute();
+const router = useRouter();
 let returnedHTML = ref<string>("");
 
 function fetchPage(path: string) {
@@ -26,6 +28,17 @@ function fetchPage(path: string) {
 		console.error(err);
 		returnedHTML.value = "Error";
 	})
+}
+
+function onContentClick(e: MouseEvent) {
+	const el = e.target as HTMLElement
+	const a = el.closest('a')
+	if (!a) return
+	const to = interceptNavTarget(e, a)
+	if (to) {
+		e.preventDefault()
+		router.push(to)
+	}
 }
 
 onMounted(() => fetchPage(route.path))

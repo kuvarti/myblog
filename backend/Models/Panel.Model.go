@@ -20,6 +20,10 @@ type PageDetail struct {
 	Source   string       `json:"Source"`
 	ViewType string       `json:"ViewType"`
 	Menu     *MenuBinding `json:"Menu"`
+	Tags     []string     `json:"Tags"`
+	Summary  string       `json:"Summary"`
+	Image    string       `json:"Image"`
+	ListTags []string     `json:"ListTags"`
 }
 
 type CreatePageRequest struct {
@@ -28,6 +32,10 @@ type CreatePageRequest struct {
 	Source   string       `json:"Source"`
 	ViewType string       `json:"ViewType"`
 	Menu     *MenuBinding `json:"Menu"`
+	Tags     []string     `json:"Tags"`
+	Summary  string       `json:"Summary"`
+	Image    string       `json:"Image"`
+	ListTags []string     `json:"ListTags"`
 }
 
 type UpdatePageRequest struct {
@@ -35,6 +43,23 @@ type UpdatePageRequest struct {
 	Source   string       `json:"Source"`
 	ViewType string       `json:"ViewType"`
 	Menu     *MenuBinding `json:"Menu"`
+	Tags     []string     `json:"Tags"`
+	Summary  string       `json:"Summary"`
+	Image    string       `json:"Image"`
+	ListTags []string     `json:"ListTags"`
+}
+
+// PageWrite carries the full set of persisted fields for Create/Update, so
+// service methods take one struct instead of a growing positional-arg list.
+type PageWrite struct {
+	PageName string
+	Path     string
+	Source   string // clean newlines
+	ViewType string
+	Tags     []string
+	Summary  string
+	Image    string
+	ListTags []string
 }
 
 type PreviewRequest struct {
