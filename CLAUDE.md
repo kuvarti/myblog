@@ -91,11 +91,11 @@ There is no `.env` file; most environment values are hardcoded. The one exceptio
 | Backend API base URL | `frontend/src/service/BaseAPI.service.ts` | `http://localhost:8080/api` |
 | MongoDB URI + credentials | `backend/server.go` (`InitDB`) — reads `MONGODB_URI` env var, else fallback | `mongodb://root:example@localhost:27017` (fallback) |
 | Database name | `backend/server.go` (`main`) | `KuvartiBlog` |
-| CORS allowed origin | `backend/server.go` (`InitServer`) | `http://localhost:5173` (listed twice) |
+| CORS allowed origins | `backend/server.go` (`InitServer`) | `http://localhost:5173`, `https://kuvarti.github.io` (+ `FRONTEND_ORIGIN` env if set) |
 | JWT signing secret | `backend/Services/Token.Service.go` | `"SecretKey"` (TODO placeholder) |
 | Mongo container creds / ports / mongo-express | `database/docker-compose.yml` | `root` / `example`, `27017`, UI on `8081` |
 
-Ports that are **not** set explicitly (rely on framework defaults): backend Gin server on `:8080` (`server.Run()` with no argument) and Vite dev server on `:5173`. Note `InitServer` registers CORS twice — a restrictive `localhost:5173` config followed by a second `AllowAllOrigins = true` config that overrides it; treat CORS as effectively open in development.
+Ports that are **not** set explicitly (rely on framework defaults): backend Gin server on `:8080` (`server.Run()` with no argument) and Vite dev server on `:5173`. `InitServer` registers a single CORS middleware with an explicit origin allowlist (`http://localhost:5173`, `https://kuvarti.github.io`, plus the `FRONTEND_ORIGIN` env var when set) and `AllowCredentials: true`. Cross-origin is real in production (GitHub Pages frontend → onrender backend are different origins), so a deployed frontend origin must be in this list or the browser blocks it; add new frontends via `FRONTEND_ORIGIN` rather than reopening to all origins.
 
 ## Backend architecture
 

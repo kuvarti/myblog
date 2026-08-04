@@ -43,20 +43,22 @@ func InitDB() {
 
 func InitServer() *gin.Engine {
 	server := gin.Default()
+	// Allowed browser origins for CORS: the local Vite dev server and the
+	// deployed GitHub Pages site. FRONTEND_ORIGIN can add another origin (e.g. a
+	// custom domain) without a code change. Requests carry a Bearer token rather
+	// than cookies, but AllowCredentials stays on for completeness.
+	allowedOrigins := []string{"http://localhost:5173", "https://kuvarti.github.io"}
+	if o := os.Getenv("FRONTEND_ORIGIN"); o != "" {
+		allowedOrigins = append(allowedOrigins, o)
+	}
 	server.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowOrigins:     allowedOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
-		AllowOriginFunc: func(origin string) bool {
-			return origin == "http://localhost:5173"
-		},
-		MaxAge: 12 * time.Hour,
+		MaxAge:           12 * time.Hour,
 	}))
-	config := cors.DefaultConfig()
-	config.AllowAllOrigins = true
-	server.Use(cors.New(config))
 	ctx = context.TODO();
 	InitDB()
 	return server
