@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Ahmet Eryilmaz</title>
+	<script>
+		// SPA fallback for GitHub Pages. The site uses HTML5 history routing
+		// (per-page bookmarkable URLs), but GitHub Pages is a static host and
+		// returns this 404.html for any deep link or refresh. We redirect to the
+		// app root with the real path stashed in the query string; index.html
+		// restores it before Vue Router boots, so the request ends on 200 at "/".
+		//
+		// pathSegmentsToKeep = 0 because the site is served at the domain root
+		// (user page / apex domain), not under a /repo/ project-page path.
+		(function () {
+			var pathSegmentsToKeep = 0;
+			var l = window.location;
+			l.replace(
+				l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+				l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+				l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+				(l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+				l.hash
+			);
+		})();
+	</script>
+</head>
+
+<body></body>
+
+</html>

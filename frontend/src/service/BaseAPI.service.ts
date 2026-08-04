@@ -7,7 +7,10 @@ export class serviceClass{
 	private userToken: string;
 	constructor(path: string = "") {
 		this.apiClient = axios.create({
-			baseURL: 'http://localhost:8080/api' + path,
+			// Backend API base URL comes from VITE_API_BASE_URL, inlined by Vite at
+			// build time (set it in .env.production or the build command). Falls
+			// back to the local dev backend when unset.
+			baseURL: (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api') + path,
 			headers: {
 				Accept: 'application/json',
 				"Content-type": "application/json"

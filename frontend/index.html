@@ -13,6 +13,19 @@
 			} catch (e) {}
 		})();
 	</script>
+	<script>
+		// Companion to public/404.html: the GitHub Pages SPA fallback redirects
+		// deep links to "/?/real/path"; restore the real path via history before
+		// Vue Router reads window.location, so bookmarks and refreshes resolve.
+		(function (l) {
+			if (l.search[1] === '/') {
+				var decoded = l.search.slice(1).split('&').map(function (s) {
+					return s.replace(/~and~/g, '&');
+				}).join('?');
+				window.history.replaceState(null, null, l.pathname.slice(0, -1) + decoded + l.hash);
+			}
+		})(window.location);
+	</script>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="icon" href="/favicon.svg">
