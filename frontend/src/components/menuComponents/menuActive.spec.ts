@@ -1,41 +1,35 @@
 import { describe, it, expect } from 'vitest'
 import { isMenuItemActive } from './menuActive'
 
-// Mirrors the real DB menu data.
-const AnaSayfa = { PageName: 'MainPage', Path: '/' } // home page
-const BlogYazilari = { Path: '/lists' } //            path-only link, no PageName
-const Projelerim = { Path: '/' } //                   home stub, no PageName
-const Iletisim = { Path: '/' } //                     home stub, no PageName
-const SoLong = { PageName: 'SoLong', Path: '' } //    real page reached via PageName
-const NavDemo = { PageName: 'StyleTest', Path: '/lists' } // real page (stale Path)
+// Mirrors the real DB menu data: with per-page routing each item carries its
+// own Path, and the active item is the one whose Path matches the route.
+const AnaSayfa = { Path: '/' } //          home page
+const BlogYazilari = { Path: '/lists' } // reserved list route
+const SoLong = { Path: '/solong' } //      a normal content page
+const StyleTest = { Path: '/styletest' } //another content page
 
 describe('isMenuItemActive', () => {
-	it('on home ("/", active MainPage) lights the three "/" items only', () => {
-		const active = 'MainPage'
-		expect(isMenuItemActive(AnaSayfa, '/', active)).toBe(true)
-		expect(isMenuItemActive(Projelerim, '/', active)).toBe(true)
-		expect(isMenuItemActive(Iletisim, '/', active)).toBe(true)
-		expect(isMenuItemActive(BlogYazilari, '/', active)).toBe(false)
-		expect(isMenuItemActive(SoLong, '/', active)).toBe(false)
-		expect(isMenuItemActive(NavDemo, '/', active)).toBe(false)
+	it('on home ("/") lights only the "/" item', () => {
+		expect(isMenuItemActive(AnaSayfa, '/')).toBe(true)
+		expect(isMenuItemActive(BlogYazilari, '/')).toBe(false)
+		expect(isMenuItemActive(SoLong, '/')).toBe(false)
+		expect(isMenuItemActive(StyleTest, '/')).toBe(false)
 	})
 
-	it('on a PageName page ("/", active SoLong) lights only that page', () => {
-		const active = 'SoLong'
-		expect(isMenuItemActive(SoLong, '/', active)).toBe(true)
-		// the home items must go dim when a non-home page is shown
-		expect(isMenuItemActive(AnaSayfa, '/', active)).toBe(false)
-		expect(isMenuItemActive(Projelerim, '/', active)).toBe(false)
-		expect(isMenuItemActive(Iletisim, '/', active)).toBe(false)
-		expect(isMenuItemActive(NavDemo, '/', active)).toBe(false)
+	it('on a content route ("/solong") lights only that page', () => {
+		expect(isMenuItemActive(SoLong, '/solong')).toBe(true)
+		expect(isMenuItemActive(AnaSayfa, '/solong')).toBe(false)
+		expect(isMenuItemActive(StyleTest, '/solong')).toBe(false)
 	})
 
-	it('on a path route ("/lists") lights only the matching path link', () => {
-		// a stale active PageName must not leak onto a non-"/" route
-		const active = 'MainPage'
-		expect(isMenuItemActive(BlogYazilari, '/lists', active)).toBe(true)
-		expect(isMenuItemActive(NavDemo, '/lists', active)).toBe(false) // has PageName, not a path link
-		expect(isMenuItemActive(AnaSayfa, '/lists', active)).toBe(false)
-		expect(isMenuItemActive(Projelerim, '/lists', active)).toBe(false)
+	it('on the reserved list route ("/lists") lights the matching link', () => {
+		expect(isMenuItemActive(BlogYazilari, '/lists')).toBe(true)
+		expect(isMenuItemActive(AnaSayfa, '/lists')).toBe(false)
+		expect(isMenuItemActive(SoLong, '/lists')).toBe(false)
+	})
+
+	it('treats a Path-less item as the home page', () => {
+		expect(isMenuItemActive({}, '/')).toBe(true)
+		expect(isMenuItemActive({}, '/lists')).toBe(false)
 	})
 })

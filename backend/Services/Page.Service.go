@@ -23,15 +23,17 @@ var (
 
 type PageService interface {
 	GetPage(string) (models.PageModel, error)
+	GetPageByPath(path string) (models.PageModel, error)
 	ConvertmdToHTML(md []byte) []byte
 	Preview(sourceClean string) (string, error)
 	List() ([]models.PageSummary, error)
 	GetRaw(name string) (models.PageModel, error)
-	Create(name, sourceClean, viewType string) error
-	Update(name, sourceClean, viewType string) error
+	Create(name, path, sourceClean, viewType string) error
+	Update(name, path, sourceClean, viewType string) error
 	Delete(name string) error
 	SetOrder(names []string) error
 	SetVisibility(name string, visible bool) error
+	PathTaken(path, excludePageName string) (bool, error)
 }
 
 // ToStorage encodes clean newlines into the bespoke "/n" line delimiter used in
@@ -82,6 +84,7 @@ func (psi *PageServiceImplementation) Preview(sourceClean string) (string, error
 func (psi *PageServiceImplementation) List() ([]models.PageSummary, error) {
 	opts := options.Find().SetProjection(bson.D{
 		{Key: "PageName", Value: 1},
+		{Key: "Path", Value: 1},
 		{Key: "ViewType", Value: 1},
 		{Key: "Order", Value: 1},
 		{Key: "Hidden", Value: 1},
@@ -110,7 +113,7 @@ func (psi *PageServiceImplementation) GetRaw(name string) (models.PageModel, err
 	return page, nil
 }
 
-func (psi *PageServiceImplementation) Create(name, sourceClean, viewType string) error {
+func (psi *PageServiceImplementation) Create(name, path, sourceClean, viewType string) error {
 	count, err := psi.collection.CountDocuments(psi.ctx, bson.D{{Key: "PageName", Value: name}})
 	if err != nil {
 		return err
@@ -126,6 +129,7 @@ func (psi *PageServiceImplementation) Create(name, sourceClean, viewType string)
 	}
 	_, err = psi.collection.InsertOne(psi.ctx, bson.D{
 		{Key: "PageName", Value: name},
+		{Key: "Path", Value: path},
 		{Key: "Page", Value: ToStorage(sourceClean)},
 		{Key: "Hash", Value: []byte{}},
 		{Key: "Text", Value: ""},
@@ -134,6 +138,16 @@ func (psi *PageServiceImplementation) Create(name, sourceClean, viewType string)
 		{Key: "Hidden", Value: false},
 	})
 	return err
+}
+
+// PathTaken reports whether some other page already owns this path. The current
+// page is excluded by PageName so re-saving an unchanged path is allowed.
+func (psi *PageServiceImplementation) PathTaken(path, excludePageName string) (bool, error) {
+	count, err := psi.collection.CountDocuments(psi.ctx, bson.D{
+		{Key: "Path", Value: path},
+		{Key: "PageName", Value: bson.D{{Key: "$ne", Value: excludePageName}}},
+	})
+	return count > 0, err
 }
 
 // SetOrder rewrites each named page's Order to its position in the slice, so the
@@ -168,10 +182,11 @@ func (psi *PageServiceImplementation) SetVisibility(name string, visible bool) e
 	return nil
 }
 
-func (psi *PageServiceImplementation) Update(name, sourceClean, viewType string) error {
+func (psi *PageServiceImplementation) Update(name, path, sourceClean, viewType string) error {
 	res, err := psi.collection.UpdateOne(psi.ctx,
 		bson.D{{Key: "PageName", Value: name}},
 		bson.D{{Key: "$set", Value: bson.D{
+			{Key: "Path", Value: path},
 			{Key: "Page", Value: ToStorage(sourceClean)},
 			{Key: "ViewType", Value: viewType},
 			{Key: "Hash", Value: []byte{}},
@@ -224,36 +239,53 @@ func (psi *PageServiceImplementation) GetPageText(pn string) (string, error) {
 	return string(html), nil
 }
 
-func (psi *PageServiceImplementation) GetPage(pn string) (models.PageModel, error) {
-	var Page models.PageModel
-	querry := bson.D{bson.E{Key: "PageName", Value: pn}}
-	err := psi.collection.FindOne(psi.ctx, querry).Decode(&Page);
-	if err != nil {
-		return models.PageModel{}, err
-	}
+// renderAndCache ensures an already-fetched page has an up-to-date rendered
+// Text cache, persisting it when stale, and returns the page with newlines
+// stripped for transport. The cache write is keyed on PageName so it works
+// whether the page was found by name or by path.
+func (psi *PageServiceImplementation) renderAndCache(page models.PageModel) (models.PageModel, error) {
 	hasher := sha1.New()
-	_, err = io.WriteString(hasher, Page.Page)
+	if _, err := io.WriteString(hasher, page.Page); err != nil {
+		return models.PageModel{}, err
+	}
+	if page.Text == "" || !testEq(page.Hash, hasher.Sum(nil)) {
+		text, err := psi.GetPageText(page.Page)
+		if err != nil {
+			return models.PageModel{}, err
+		}
+		page.Text = text
+		page.Hash = hasher.Sum(nil)
+		_, err = psi.collection.UpdateOne(psi.ctx,
+			bson.D{{Key: "PageName", Value: page.PageName}},
+			bson.D{{Key: "$set", Value: bson.D{
+				{Key: "Hash", Value: page.Hash},
+				{Key: "Text", Value: page.Text},
+			}}},
+		)
+		if err != nil {
+			return models.PageModel{}, err
+		}
+	}
+	page.Text = strings.ReplaceAll(page.Text, "\n", "")
+	return page, nil
+}
+
+func (psi *PageServiceImplementation) GetPage(pn string) (models.PageModel, error) {
+	var page models.PageModel
+	err := psi.collection.FindOne(psi.ctx, bson.D{{Key: "PageName", Value: pn}}).Decode(&page)
 	if err != nil {
 		return models.PageModel{}, err
 	}
-	if Page.Text == "" || !testEq(Page.Hash, hasher.Sum(nil)) {
-		Page.Text, err = psi.GetPageText(Page.Page)
-		Page.Hash = hasher.Sum(nil)
-		if err != nil {
-			return models.PageModel{}, err
-		}
-		_, err = psi.collection.UpdateOne(psi.ctx, querry, bson.D{
-			bson.E{Key: "$set", Value: bson.D{
-				bson.E{Key: "Hash", Value: Page.Hash},
-				bson.E{Key: "Text", Value: Page.Text},
-			}},
-		})
-		if err != nil {
-			return models.PageModel{}, err
-		}
+	return psi.renderAndCache(page)
+}
+
+func (psi *PageServiceImplementation) GetPageByPath(path string) (models.PageModel, error) {
+	var page models.PageModel
+	err := psi.collection.FindOne(psi.ctx, bson.D{{Key: "Path", Value: path}}).Decode(&page)
+	if err != nil {
+		return models.PageModel{}, err
 	}
-	Page.Text = strings.ReplaceAll(Page.Text, "\n", "")
-	return Page, nil
+	return psi.renderAndCache(page)
 }
 
 func testEq(a, b []byte) bool {

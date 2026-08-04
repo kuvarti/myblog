@@ -5,6 +5,7 @@ import (
 	services "backend/Services"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,6 +32,27 @@ func InitPanelController(pageService services.PageService, menuService services.
 	return pc
 }
 
+// pathValidity classifies a page path so CreatePage/UpdatePage can map each
+// failure to the right HTTP status. Uniqueness needs the DB and is checked
+// separately; this covers only format and reserved-route rules.
+type pathValidity int
+
+const (
+	pathOK        pathValidity = iota
+	pathBadFormat              // empty or missing leading slash
+	pathReserved               // collides with a client-only route
+)
+
+func validatePagePathFormat(path string) pathValidity {
+	if path == "" || !strings.HasPrefix(path, "/") {
+		return pathBadFormat
+	}
+	if path == "/panel" || path == "/lists" {
+		return pathReserved
+	}
+	return pathOK
+}
+
 func (pc *PanelController) ListPages(ctx *gin.Context) {
 	pages, err := pc.PageService.List()
 	if err != nil {
@@ -49,11 +71,12 @@ func (pc *PanelController) GetPage(ctx *gin.Context) {
 	}
 	detail := models.PageDetail{
 		PageName: page.PageName,
+		Path:     page.Path,
 		Source:   services.FromStorage(page.Page),
 		ViewType: page.ViewType,
 	}
 	if menu, err := pc.MenuService.GetByPageName(name); err == nil {
-		detail.Menu = &models.MenuBinding{Name: menu.Name, Caption: menu.Caption, Path: menu.Path}
+		detail.Menu = &models.MenuBinding{Name: menu.Name, Caption: menu.Caption}
 	}
 	ctx.JSON(http.StatusOK, detail)
 }
@@ -68,18 +91,24 @@ func (pc *PanelController) CreatePage(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "PageName and Source are required"})
 		return
 	}
-	if req.Menu != nil && req.Menu.Path != "" {
-		taken, err := pc.MenuService.PathTakenByOther(req.Menu.Path, req.PageName)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		if taken {
-			ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "path already used by another page"})
-			return
-		}
+	switch validatePagePathFormat(req.Path) {
+	case pathBadFormat:
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "path must start with /"})
+		return
+	case pathReserved:
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "path is reserved"})
+		return
 	}
-	if err := pc.PageService.Create(req.PageName, req.Source, req.ViewType); err != nil {
+	taken, err := pc.PageService.PathTaken(req.Path, req.PageName)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if taken {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "path already used by another page"})
+		return
+	}
+	if err := pc.PageService.Create(req.PageName, req.Path, req.Source, req.ViewType); err != nil {
 		if errors.Is(err, services.ErrPageExists) {
 			ctx.JSON(http.StatusConflict, gin.H{"error": "a page with that name already exists"})
 			return
@@ -88,7 +117,7 @@ func (pc *PanelController) CreatePage(ctx *gin.Context) {
 		return
 	}
 	if req.Menu != nil {
-		menu := models.MenuModel{Name: req.Menu.Name, Caption: req.Menu.Caption, Path: req.Menu.Path, PageName: req.PageName}
+		menu := models.MenuModel{Name: req.Menu.Name, Caption: req.Menu.Caption, PageName: req.PageName}
 		if err := pc.MenuService.Upsert(menu); err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -108,18 +137,24 @@ func (pc *PanelController) UpdatePage(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Source is required"})
 		return
 	}
-	if req.Menu != nil && req.Menu.Path != "" {
-		taken, err := pc.MenuService.PathTakenByOther(req.Menu.Path, name)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		if taken {
-			ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "path already used by another page"})
-			return
-		}
+	switch validatePagePathFormat(req.Path) {
+	case pathBadFormat:
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "path must start with /"})
+		return
+	case pathReserved:
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "path is reserved"})
+		return
 	}
-	if err := pc.PageService.Update(name, req.Source, req.ViewType); err != nil {
+	taken, err := pc.PageService.PathTaken(req.Path, name)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if taken {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "path already used by another page"})
+		return
+	}
+	if err := pc.PageService.Update(name, req.Path, req.Source, req.ViewType); err != nil {
 		if errors.Is(err, services.ErrPageNotFound) {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": "page not found"})
 			return
@@ -128,7 +163,7 @@ func (pc *PanelController) UpdatePage(ctx *gin.Context) {
 		return
 	}
 	if req.Menu != nil {
-		menu := models.MenuModel{Name: req.Menu.Name, Caption: req.Menu.Caption, Path: req.Menu.Path, PageName: name}
+		menu := models.MenuModel{Name: req.Menu.Name, Caption: req.Menu.Caption, PageName: name}
 		if err := pc.MenuService.Upsert(menu); err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

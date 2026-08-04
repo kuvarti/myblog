@@ -13,27 +13,21 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { computed } from 'vue'
-import { useStore } from 'vuex'
 import { type MenuListModal } from '@/types/MenuListModal'
 import { isMenuItemActive } from '@/components/menuComponents/menuActive'
 import router from '@/router';
 
 let route = useRoute();
-let GlobalStore = useStore();
 let props = defineProps<MenuListModal>()
-let activePage = computed(() => GlobalStore.getters.GetActivePage as string);
 let textColorFunction = computed(() =>
-	isMenuItemActive(props, route.path, activePage.value)
+	isMenuItemActive(props, route.path)
 		? 'text-activePageColor'
 		: 'text-deActivePageColor'
 )
 
+// Per-page routing: navigate straight to the page's own Path. A Path-less item
+// falls back to the home route.
 let RouterRedirect = () => {
-	if (props.PageName) {
-		GlobalStore.dispatch('SetActivePage', props.PageName)
-		router.push('/')
-	} else {
-		router.push(props.Path || '/')
-	}
+	router.push(props.Path || '/')
 }
 </script>

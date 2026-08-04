@@ -26,7 +26,6 @@ import * as routes from '@/router/routes'
 import { useStore } from 'vuex';
 import { onMounted, provide } from 'vue'
 import serviceClass from '@/service/BaseAPI.service'
-import { HOME_PAGE } from '@/global/constants'
 import AppToast from '@/components/AppToast.vue'
 provide('Service', serviceClass);
 
@@ -38,7 +37,6 @@ let handleResize = function() {
 onMounted(() => {
 	window.addEventListener('resize', handleResize);
 	GlobalStore.dispatch('SetScreenLevel', window.innerWidth);
-	GlobalStore.dispatch('SetActivePage', HOME_PAGE);
 })
 </script>
 @/service/BaseAPI.service

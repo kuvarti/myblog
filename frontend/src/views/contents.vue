@@ -12,15 +12,15 @@
 
 <script setup lang="ts">
 import { onMounted, ref, inject, watch } from 'vue';
-import { useStore } from 'vuex';
+import { useRoute } from 'vue-router';
 import { type ServiceType } from '@/service/BaseAPI.service'
 
 let service:ServiceType = inject<ServiceType>('Service');
-let GlobalStore = useStore()
+let route = useRoute();
 let returnedHTML = ref<string>("");
 
-function fetchPage(name: string) {
-	service?.getPage(name).then((data) => {
+function fetchPage(path: string) {
+	service?.getPageByPath(path).then((data) => {
 		returnedHTML.value = data.Page;
 	}).catch((err) => {
 		console.error(err);
@@ -28,7 +28,6 @@ function fetchPage(name: string) {
 	})
 }
 
-onMounted(() => fetchPage(GlobalStore.getters.GetActivePage))
-watch(() => GlobalStore.getters.GetActivePage, (name) => fetchPage(name))
+onMounted(() => fetchPage(route.path))
+watch(() => route.path, (path) => fetchPage(path))
 </script>
-@/service/BaseAPI.service

@@ -5,6 +5,7 @@ import type { PanelPageSummary, PanelPageDetail, MenuBinding } from '@/types/Pan
 
 export interface SavePagePayload {
 	PageName: string
+	Path: string
 	Source: string
 	ViewType: string
 	Menu: MenuBinding | null

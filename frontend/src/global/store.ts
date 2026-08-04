@@ -5,7 +5,6 @@ export default createStore({
 	state: {
 		ScreenLevel: MediaEnum.Medium,
 		IsMobile: true,
-		ActivePage: '',
 	},
 	getters: {
 		GetScreenLevel(state: any): typeof MediaEnum {
@@ -14,17 +13,11 @@ export default createStore({
 		GetIsMobile(state: any): boolean {
 			return state.ScreenLevel < 2
 		},
-		GetActivePage(state: any): String {
-			return state.ActivePage
-		},
 	},
 	mutations: {
 		ScreenLevelMutation(state:any, level: typeof MediaEnum) {
 			state.ScreenLevel = level;
 			state.IsMobile = state.ScreenLevel < 2;
-		},
-		ActivePageMutation(state: any, page: String) {
-			state.ActivePage = page;
 		},
 	},
 	actions: {
@@ -39,9 +32,6 @@ export default createStore({
 				state.commit('ScreenLevelMutation', MediaEnum.Small);
 			else //* 768 alti
 				state.commit('ScreenLevelMutation', MediaEnum.ExtraSmall);
-		},
-		SetActivePage(state:any, page: String) {
-			state.commit('ActivePageMutation', page);
 		},
 	}
 })

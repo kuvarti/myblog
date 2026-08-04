@@ -14,7 +14,6 @@ type MenuService interface {
 	Upsert(m models.MenuModel) error
 	DeleteByPageName(pageName string) error
 	GetByPageName(pageName string) (models.MenuModel, error)
-	PathTakenByOther(path, excludePageName string) (bool, error)
 }
 
 type MenuServiceImplementation struct {
@@ -43,6 +42,8 @@ func (msi *MenuServiceImplementation) GetMenu() ([]*models.MenuModel, error) {
 	return returnMenu, nil
 }
 
+// Upsert writes the display metadata for a page's menu entry. The page owns its
+// Path now (see PageService), so the menu document carries only Name/Caption.
 func (msi *MenuServiceImplementation) Upsert(m models.MenuModel) error {
 	if m.Name == "" {
 		m.Name = m.PageName
@@ -53,7 +54,6 @@ func (msi *MenuServiceImplementation) Upsert(m models.MenuModel) error {
 		bson.D{{Key: "$set", Value: bson.D{
 			{Key: "Name", Value: m.Name},
 			{Key: "Caption", Value: m.Caption},
-			{Key: "Path", Value: m.Path},
 			{Key: "PageName", Value: m.PageName},
 		}}},
 		opts,
@@ -70,18 +70,4 @@ func (msi *MenuServiceImplementation) GetByPageName(pageName string) (models.Men
 	var m models.MenuModel
 	err := msi.collection.FindOne(msi.ctx, bson.D{{Key: "PageName", Value: pageName}}).Decode(&m)
 	return m, err
-}
-
-// PathTakenByOther reports whether some other menu document already uses this
-// path. Empty paths never conflict (many pages may have no path). The current
-// page is excluded by PageName so re-saving an unchanged path is allowed.
-func (msi *MenuServiceImplementation) PathTakenByOther(path, excludePageName string) (bool, error) {
-	if path == "" {
-		return false, nil
-	}
-	count, err := msi.collection.CountDocuments(msi.ctx, bson.D{
-		{Key: "Path", Value: path},
-		{Key: "PageName", Value: bson.D{{Key: "$ne", Value: excludePageName}}},
-	})
-	return count > 0, err
 }

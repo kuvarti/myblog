@@ -29,9 +29,9 @@ func (mc *MenuController) GetMenu(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
 		return
 	}
-	// The page is the source of truth for nav membership/order/visibility; the
-	// menu docs only supply display captions/paths. If the page list is
-	// unavailable, fall back to returning the raw menus.
+	// The page is the source of truth for nav membership/order/visibility and now
+	// its own Path; the menu docs only supply display captions. If the page list
+	// is unavailable, fall back to returning the raw menus.
 	pages, err := mc.PageService.List()
 	if err != nil {
 		ctx.JSON(http.StatusOK, menus)
@@ -41,16 +41,16 @@ func (mc *MenuController) GetMenu(ctx *gin.Context) {
 }
 
 // buildNav produces the public navigation from the pages (the source of truth
-// for membership, order, and visibility) joined to their menu documents for
-// display captions/paths. Pages arrive already Order-sorted from
-// PageService.List(). A visible page with no menu document falls back to its
-// PageName as the caption; menu documents with no matching page (hand-seeded
-// stubs) are dropped.
+// for membership, order, and visibility) joined to their menu documents for the
+// display caption only. Each nav item's Path comes from the page itself. Pages
+// arrive already Order-sorted from PageService.List(). A visible page with no
+// menu caption falls back to its PageName; menu documents with no matching page
+// (hand-seeded stubs) are dropped.
 func buildNav(pages []models.PageSummary, menus []*models.MenuModel) []*models.MenuModel {
-	byPage := make(map[string]*models.MenuModel, len(menus))
+	capByPage := make(map[string]string, len(menus))
 	for _, m := range menus {
 		if m.PageName != "" {
-			byPage[m.PageName] = m
+			capByPage[m.PageName] = m.Caption
 		}
 	}
 	nav := make([]*models.MenuModel, 0, len(pages))
@@ -58,16 +58,16 @@ func buildNav(pages []models.PageSummary, menus []*models.MenuModel) []*models.M
 		if !p.Visible {
 			continue
 		}
-		if m, ok := byPage[p.PageName]; ok {
-			nav = append(nav, m)
-		} else {
-			nav = append(nav, &models.MenuModel{
-				Name:     p.PageName,
-				Caption:  p.PageName,
-				Path:     "",
-				PageName: p.PageName,
-			})
+		caption := p.PageName
+		if c, ok := capByPage[p.PageName]; ok && c != "" {
+			caption = c
 		}
+		nav = append(nav, &models.MenuModel{
+			Name:     p.PageName,
+			Caption:  caption,
+			Path:     p.Path,
+			PageName: p.PageName,
+		})
 	}
 	return nav
 }

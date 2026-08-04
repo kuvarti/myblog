@@ -1,11 +1,11 @@
 export interface MenuBinding {
 	Name: string
 	Caption: string
-	Path: string
 }
 
 export interface PanelPageSummary {
 	PageName: string
+	Path: string
 	ViewType: string
 	Order: number
 	Visible: boolean
@@ -13,6 +13,7 @@ export interface PanelPageSummary {
 
 export interface PanelPageDetail {
 	PageName: string
+	Path: string
 	Source: string
 	ViewType: string
 	Menu: MenuBinding | null

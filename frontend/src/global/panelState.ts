@@ -48,7 +48,7 @@ export async function setVisibility(name: string, visible: boolean): Promise<voi
 }
 
 export function startNew(): void {
-	state.selected = { PageName: '', Source: '', ViewType: '', Menu: { Name: '', Caption: '', Path: '' } }
+	state.selected = { PageName: '', Path: '', Source: '', ViewType: '', Menu: { Name: '', Caption: '' } }
 	state.isNew = true
 	state.dirty = false
 }

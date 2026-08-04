@@ -43,6 +43,24 @@ export class serviceClass{
 			})
 		})
 	}
+	// Resolve a page by its route Path (the per-page routing key). Mirrors
+	// getPage's newline handling; the leading "/" is encoded so the query stays
+	// a single value.
+	public async getPageByPath(path: string) : Promise<PageResponseModal> {
+		return new Promise((resolve) => {
+			this.apiClient.get('Page?Path=' + encodeURIComponent(path)).catch((reason) => {
+				console.log('apiget field fail:', reason);
+				resolve({Page: '', ViewType: ''})
+			}).then((value) => {
+				if (value && value.data){
+					value.data.Page = value.data.Page.replace(/\/n/g, '\n').replace(/\\n/g, '\n')
+					resolve(value.data)
+				}
+				else
+					resolve({Page: '', ViewType: ''})
+			})
+		})
+	}
 };
 
 export type ServiceType = serviceClass | undefined | null;

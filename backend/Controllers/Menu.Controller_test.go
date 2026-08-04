@@ -41,11 +41,23 @@ func TestBuildNavCaptionFallback(t *testing.T) {
 }
 
 func TestBuildNavKeepsMenuCaption(t *testing.T) {
-	pages := []models.PageSummary{{PageName: "A", Visible: true}}
+	pages := []models.PageSummary{{PageName: "A", Path: "/a", Visible: true}}
 	menus := []*models.MenuModel{{PageName: "A", Caption: "Alpha", Path: "/a"}}
 	nav := buildNav(pages, menus)
 	if nav[0].Caption != "Alpha" || nav[0].Path != "/a" {
-		t.Fatalf("expected menu caption/path, got %+v", nav[0])
+		t.Fatalf("expected menu caption and page path, got %+v", nav[0])
+	}
+}
+
+func TestBuildNavPathFromPage(t *testing.T) {
+	pages := []models.PageSummary{{PageName: "A", Path: "/alpha", Visible: true}}
+	menus := []*models.MenuModel{{PageName: "A", Caption: "Alpha", Path: "/stale"}}
+	nav := buildNav(pages, menus)
+	if nav[0].Path != "/alpha" {
+		t.Fatalf("expected nav path from page '/alpha', got %q", nav[0].Path)
+	}
+	if nav[0].Caption != "Alpha" {
+		t.Fatalf("expected caption 'Alpha', got %q", nav[0].Caption)
 	}
 }
 

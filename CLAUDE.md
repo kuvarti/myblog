@@ -66,8 +66,9 @@ Users are not seeded — create one in the `Users` collection with a bcrypt-hash
 air            # hot-reload dev server (config in .air.toml, builds to ./tmp/main)
 go run .       # run once without hot reload
 go build -o ./tmp/main .
+go test ./...  # run the unit-test suite
 ```
-The server listens on `:8080` (Gin default). There is no test suite.
+The server listens on `:8080` (Gin default). The unit tests are pure logic tests — stdlib `testing`, no MongoDB or HTTP server needed: `buildNav` filtering/order/caption in `Controllers/Menu.Controller_test.go`, path validation in `Controllers/Panel.Controller_test.go`, and the render + `ToStorage`/`FromStorage` helpers in `Services/Page.Service_test.go`. Run one test with e.g. `go test ./Services -run TestPreviewRendersMarkdownHeading`.
 
 ### Frontend (`cd frontend`)
 ```sh
@@ -77,9 +78,9 @@ npm run build        # type-check (vue-tsc) + production build
 npm run type-check
 npm run lint         # eslint --fix across the repo
 npm run format       # prettier on src/
-npm run test:unit    # vitest (jsdom); no test files exist yet
+npm run test:unit    # vitest (jsdom); starts in watch mode — append `-- run` for a single pass
 ```
-Run a single test once suites exist: `npm run test:unit -- <path-or-name-pattern>`.
+Spec files live next to the code they cover (`*.spec.ts`): `global/` (theme, panelState, notify), `service/Panel.service.spec.ts`, and the component specs under `components/` (menuActive, scrollSync, menuReorder). Run a single test: `npm run test:unit -- <path-or-name-pattern>`.
 
 ## Configuration touchpoints
 
@@ -114,8 +115,8 @@ MongoDB is schemaless — document shape is defined by the Go structs (bson tags
 | Collection | Shape (authoritative) | Owner service | Notes |
 |-----------|-----------------------|---------------|-------|
 | `Users` | `Models/User.Model.go` (`UserModel`) | `UserService` | No seed — create manually with a bcrypt-hashed password |
-| `Menus` | `Models/Menu.Model.go` (`MenuModel`) | `MenuService` | Some seed rows omit `PageName`; DB docs have `_id`, which the model doesn't map |
-| `Pages` | `Models/Pages.Model.go` (`PageModel`) | `PageService` | `Hash`/`Text` are machine-managed render cache, not hand-authored (see Page rendering below) |
+| `Menus` | `Models/Menu.Model.go` (`MenuModel`) | `MenuService` | Supplies the nav **caption** only; page membership/order/visibility/`Path` are owned by `Pages`. DB docs have `_id` (unmapped) and a legacy `Path` field that is no longer read |
+| `Pages` | `Models/Pages.Model.go` (`PageModel`) | `PageService` | `Path` is the unique route key (see Routing); `Hash`/`Text` are machine-managed render cache, not hand-authored (see Page rendering below) |
 
 ### API endpoints
 All routes are under the `/api` group. Auth column = requires `Authorization: Bearer <token>` header.
@@ -125,11 +126,11 @@ All routes are under the `/api` group. Auth column = requires `Authorization: Be
 | POST | `/api/auth/login` | — | `{ "userName", "passWord" }` | Verify credentials, return `{ Message, token }` |
 | GET | `/api/auth/AmIAuth` | Bearer | — | Token check (returns `{ "Yes": "YES" }`) |
 | GET | `/api/MenuList/Menu` | — | — | All menu items (`Menus` collection) |
-| GET | `/api/Page` | — | `?PageName=<name>` | Rendered page HTML + `ViewType` |
-| GET | `/api/auth/ControlPanel/Pages` | Bearer | — | List `[{PageName, ViewType}]` |
-| GET | `/api/auth/ControlPanel/Pages/:name` | Bearer | — | Raw source (clean newlines) + menu binding for editing |
-| POST | `/api/auth/ControlPanel/Pages` | Bearer | `{PageName, Source, ViewType, Menu?}` | Create page (+ upsert menu); `409` on duplicate |
-| PUT | `/api/auth/ControlPanel/Pages/:name` | Bearer | `{Source, ViewType, Menu?}` | Update page (+ upsert menu); PageName immutable |
+| GET | `/api/Page` | — | `?Path=<path>` or `?PageName=<name>` | Rendered page HTML + `ViewType`; resolves by `Path` (per-page routing) or `PageName`. Missing both → `400` |
+| GET | `/api/auth/ControlPanel/Pages` | Bearer | — | List `[{PageName, Path, ViewType, Order, Visible}]` |
+| GET | `/api/auth/ControlPanel/Pages/:name` | Bearer | — | Raw source (clean newlines) + `Path` + menu binding for editing |
+| POST | `/api/auth/ControlPanel/Pages` | Bearer | `{PageName, Path, Source, ViewType, Menu?}` | Create page (+ upsert menu); `409` duplicate name, `400` bad path, `422` reserved/taken path |
+| PUT | `/api/auth/ControlPanel/Pages/:name` | Bearer | `{Path, Source, ViewType, Menu?}` | Update page (+ upsert menu); PageName immutable; `400` bad path, `422` reserved/taken path |
 | DELETE | `/api/auth/ControlPanel/Pages/:name` | Bearer | — | Delete page (+ cascade its menu entry) |
 | POST | `/api/auth/ControlPanel/Preview` | Bearer | `{Source}` | Stateless render → `{Html}` (no DB write) |
 
@@ -142,9 +143,9 @@ The `ControlPanel` endpoints power the admin panel (`Controllers/Panel.Controlle
 - **Gotcha:** the JWT `secretKey` in `Services/Token.Service.go` is the literal string `"SecretKey"` (marked `TODO`). Do not treat auth as production-grade.
 
 ### Page rendering (`Services/Page.Service.go`)
-A page document in the `Pages` collection has: `Page` (the hand-authored source), `Text` (the cached rendered HTML — don't edit by hand), `Hash` (SHA-1 of `Page`, the cache key), plus `PageName` and `ViewType`.
+A page document in the `Pages` collection has: `Page` (the hand-authored source), `Text` (the cached rendered HTML — don't edit by hand), `Hash` (SHA-1 of `Page`, the cache key), plus `PageName`, `Path` (the unique route key — see Routing), and `ViewType`.
 
-On `GetPage`, the service SHA-1-hashes the raw `Page` and compares it to the stored `Hash`; if the content changed (or `Text` is empty) it re-renders via `GetPageText` + `gomarkdown` and caches the new `Text`/`Hash` back into MongoDB, otherwise it returns the cached `Text`. So editing `Page` triggers a re-render on next fetch; editing `Text` directly is pointless.
+On `GetPage`/`GetPageByPath`, the service SHA-1-hashes the raw `Page` and compares it to the stored `Hash`; if the content changed (or `Text` is empty) it re-renders via `GetPageText` + `gomarkdown` and caches the new `Text`/`Hash` back into MongoDB (keyed on `PageName`), otherwise it returns the cached `Text`. So editing `Page` triggers a re-render on next fetch; editing `Text` directly is pointless.
 
 **Source authoring format** (`Page` field) — this is a bespoke line-based mix of Markdown and HTML, not standard Markdown:
 - Lines are separated by the literal token `/n` (slash-n), which `GetPageText` converts to real newlines before splitting; `/n/n` is a blank separator.
@@ -153,7 +154,7 @@ On `GetPage`, the service SHA-1-hashes the raw `Page` and compares it to the sto
 - **Blank lines are dropped** (they produce no output on their own).
 - **Gotcha:** any `<` anywhere on a line switches that whole line to HTML passthrough, so a Markdown line like `a < b` or `List<T>` won't render as Markdown — keep `<` out of Markdown lines. Also, the final rendered HTML has all newlines stripped (`ReplaceAll(Text, "\n", "")`), and Markdown links open in a new tab (`HrefTargetBlank`).
 
-**Authoring a new page:** the intended way is the **admin panel** (create/edit/delete + live preview, with a bound menu entry — see the `ControlPanel` endpoints and Frontend architecture). Under the hood a page is a `Pages` document with `PageName`, a `Page` string in the format above, and empty `Hash`/`Text` (both fill in on the first `GET /api/Page?PageName=<name>`), plus a matching `Menus` entry to surface it in the nav.
+**Authoring a new page:** the intended way is the **admin panel** (create/edit/delete + live preview, with a bound menu entry — see the `ControlPanel` endpoints and Frontend architecture). Under the hood a page is a `Pages` document with `PageName`, a unique `Path` (its route), a `Page` string in the format above, and empty `Hash`/`Text` (both fill in on the first `GET /api/Page?Path=<path>`), plus a matching `Menus` entry to surface it in the nav.
 
 Editing this rendering/caching logic is the trickiest part of the backend.
 
@@ -162,10 +163,10 @@ Editing this rendering/caching logic is the trickiest part of the backend.
 Vue 3 `<script setup>` + TypeScript, Vuex 4, Vue Router 4, PrimeVue, Tailwind (+ SCSS).
 
 - **Two mount points** (`index.html`): `#sidemenu` and `#app`. `App.vue` `<teleport>`s the sliding side menu into `#sidemenu`, keeping it outside the routed content grid.
-- **Routing** (`router/index.ts`): three routes — `/` → `contents`, `/lists` → `lists`, `/panel` → `panel`. View components are re-exported as a barrel in `router/routes.ts`.
-- **Admin panel** (`/panel`): `views/panel.vue` gates on `UserService.IsLogin` / `AuthChecked` — shows `LoginComponent` when signed out, else `PageEditor.vue` (plain-textarea Markdown editor + debounced live preview via `POST /Preview`, rendered into a `.content` wrapper). The teleported side panel shows `PanelMenu.vue` (page list + "New page"). Cross-component state lives in `global/panelState.ts` (a reactive singleton: `pages`, `selected`, `dirty`, `refresh`/`select`/`startNew`). `service/Panel.service.ts` extends `serviceClass` (base path `/auth/ControlPanel`), attaches the Bearer token per call, and flips `IsLogin` to false on a 401.
-- **State** (`global/store.ts`): Vuex store tracks responsive `ScreenLevel` (see `MediaEnum`), a derived `GetIsMobile` getter (`ScreenLevel < 2`), and `ActivePage`. `App.vue` dispatches `SetScreenLevel` on mount and window resize to drive the responsive layout. `ActivePage` names which backend page `contents.vue` fetches.
-- **API layer**: `service/BaseAPI.service.ts` exports a `serviceClass` (axios wrapper, base URL `http://localhost:8080/api`) and a default singleton. `App.vue` `provide()`s this singleton as `'Service'`; components `inject('Service')` it. `service/User.service.ts` extends `serviceClass` (base path `/auth`) and persists the JWT via `LocalStorage.service.ts`.
+- **Routing** (`router/index.ts`): two reserved routes — `/panel` → `panel`, `/lists` → `lists` — followed by a catch-all `/:pathMatch(.*)*` → `contents` (kept last so the reserved routes win). Every content page lives at its own URL: `contents.vue` reads `route.path` and fetches `GET /api/Page?Path=<route.path>`, re-fetching on `route.path` change. The home page is the one whose `Path` is `/`. View components are re-exported as a barrel in `router/routes.ts`.
+- **Admin panel** (`/panel`): `views/panel.vue` gates on `UserService.IsLogin` / `AuthChecked` — shows `LoginComponent` when signed out, else `PageEditor.vue` (plain-textarea Markdown editor + debounced live preview via `POST /Preview`, rendered into a `.content` wrapper; fields include the page's route **Path** and the menu **Caption**). The teleported side panel shows `PanelMenu.vue` (page list + "New page"). Cross-component state lives in `global/panelState.ts` (a reactive singleton: `pages`, `selected`, `dirty`, `refresh`/`select`/`startNew`). `service/Panel.service.ts` extends `serviceClass` (base path `/auth/ControlPanel`), attaches the Bearer token per call, and flips `IsLogin` to false on a 401.
+- **State** (`global/store.ts`): Vuex store tracks responsive `ScreenLevel` (see `MediaEnum`) and a derived `GetIsMobile` getter (`ScreenLevel < 2`). `App.vue` dispatches `SetScreenLevel` on mount and window resize to drive the responsive layout. The active page is no longer store state — it is the URL (`route.path`); `MenuItem` navigates with `router.push(Path)` and highlights via `isMenuItemActive(item, route.path)` (`components/menuComponents/menuActive.ts`).
+- **API layer**: `service/BaseAPI.service.ts` exports a `serviceClass` (axios wrapper, base URL `http://localhost:8080/api`) and a default singleton, with `getPageByPath(path)` (per-page routing) and the legacy `getPage(pageName)`. `App.vue` `provide()`s this singleton as `'Service'`; components `inject('Service')` it. `service/User.service.ts` extends `serviceClass` (base path `/auth`) and persists the JWT via `LocalStorage.service.ts`.
 - **Path alias**: `@/` → `src/` (configured in both `vite.config.ts` and tsconfig).
 - **Theme & styling** (theme-aware design-token system): Design tokens live as CSS custom properties in `src/assets/theme.css` — colors (`--bg`, `--surface`, `--surface-2`, `--fg`, `--muted`, `--accent`, `--border`) and type (`--serif` Fraunces, `--sans` Inter, `--mono` Fira Code). Three scopes define them: `:root` (light, the default), `html[data-theme="dark"]` (dark), and a `prefers-color-scheme: dark` block that supplies the dark values when no explicit `data-theme` is set. `tailwind.config.js` maps its color keys to these `var(--…)` tokens, so utility classes like `bg-surface`, `text-fg`, `text-accent`, `border-border` are automatically theme-aware; the legacy names (`midnightPurple` / `mainComponentBackground` → surface, `activePageColor` → accent, `deActivePageColor` → muted) are remapped to tokens for back-compat. Theme switching lives in `global/theme.ts` (`resolveInitialTheme` / `applyTheme` / `getTheme` / `toggleTheme`), which flips `data-theme` on `<html>` and persists the choice via `LocalStorage.service.ts` under the key `theme`; `components/ThemeToggle.vue` is the toggle UI, and a no-flash inline script in `index.html`'s `<head>` sets `data-theme` before first paint.
 - **Styling the rendered Markdown**: the `v-html` output in `views/contents.vue` is styled exclusively through the `.content` wrapper in `src/assets/content.css` using descendant selectors — Tailwind utility classes do not reach that injected HTML. This is the "single definitive stylesheet for arbitrary `.md` content" goal from Purpose & design intent. Global stylesheets are imported in `main.ts` in order: `theme.css`, `main.css`, `sliderMenu.css`, `content.css`.
@@ -174,5 +175,5 @@ Vue 3 `<script setup>` + TypeScript, Vuex 4, Vue Router 4, PrimeVue, Tailwind (+
 
 These are intentionally unfinished, not bugs — don't treat them as breakage:
 
-- **Routing coverage / per-page URLs.** Clicking a nav item now loads its page by `PageName` (`MenuItem` dispatches `SetActivePage`, `contents.vue` re-fetches reactively), but there are still only three routes (`/`, `/lists`, `/panel`). `ActivePage` lives in Vuex, not the URL, so a clicked page is not bookmarkable and refreshing `/` returns to the default page. Real per-page routing is a later slice.
+- **Reserved-route views.** `/panel` is the admin panel; `/lists` is reserved for a future DynamicList view (a page-tag-driven index) and currently renders the `lists` view stub. Every other path is a content page resolved by `Path`. Path uniqueness is enforced panel-side (`422` on collision); there is no DB unique index yet, so a direct DB write could still create a duplicate `Path`.
 - **`ViewType` render mode.** `PageModel.ViewType` is returned by `/api/Page` and seeded with values like `"PlainHTML"`. It is deliberately the per-page display-mode switch: the intent is that if a page ever needs to be shown differently from the default Markdown pipeline (e.g. served as plain HTML), that page carries a distinct `ViewType` and the frontend branches on it to pick the matching render mode. The frontend doesn't branch on it yet — every page renders the same way — so it is a designed-in hook, not dead code; wire the frontend to it when a page that needs a different display type actually appears.

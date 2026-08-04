@@ -9,6 +9,11 @@
 						class="bg-surface-2 border border-border text-fg rounded p-2" />
 				</div>
 				<div class="flex flex-col">
+					<label class="text-sm text-muted mb-1">Page path</label>
+					<InputText v-model="state.selected.Path"
+						class="bg-surface-2 border border-border text-fg rounded p-2" />
+				</div>
+				<div class="flex flex-col">
 					<label class="text-sm text-muted mb-1">View type</label>
 					<InputText v-model="state.selected.ViewType"
 						class="bg-surface-2 border border-border text-fg rounded p-2" />
@@ -16,11 +21,6 @@
 				<div class="flex flex-col">
 					<label class="text-sm text-muted mb-1">Menu caption</label>
 					<InputText v-model="menu.Caption"
-						class="bg-surface-2 border border-border text-fg rounded p-2" />
-				</div>
-				<div class="flex flex-col">
-					<label class="text-sm text-muted mb-1">Menu path</label>
-					<InputText v-model="menu.Path"
 						class="bg-surface-2 border border-border text-fg rounded p-2" />
 				</div>
 			</div>
@@ -47,7 +47,6 @@
 					</template>
 				</template>
 				<span v-if="state.dirty" class="text-muted text-sm">unsaved changes</span>
-				<span v-if="error" class="text-sm" style="color:#c0392b">{{ error }}</span>
 			</div>
 		</template>
 	</div>
@@ -58,6 +57,8 @@ import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { usePanelState, refresh, select } from '@/global/panelState'
+import { notify } from '@/global/notify'
+import { refreshMenu } from '@/global/menuRefresh'
 import PanelService from '@/service/Panel.service'
 import type { MenuBinding } from '@/types/PanelModels'
 import {
@@ -68,9 +69,8 @@ import {
 const state = usePanelState()
 const source = ref('')
 const previewHtml = ref('')
-const menu = ref<MenuBinding>({ Name: '', Caption: '', Path: '' })
+const menu = ref<MenuBinding>({ Name: '', Caption: '' })
 const confirming = ref(false)
-const error = ref('')
 
 const editorEl = ref<HTMLTextAreaElement>()
 const previewEl = ref<HTMLElement>()
@@ -127,9 +127,8 @@ onBeforeUnmount(() => ro?.disconnect())
 
 watch(() => state.selected, (sel) => {
 	source.value = sel?.Source ?? ''
-	menu.value = sel?.Menu ?? { Name: '', Caption: '', Path: '' }
+	menu.value = sel?.Menu ?? { Name: '', Caption: '' }
 	confirming.value = false
-	error.value = ''
 	runPreview()
 }, { immediate: true })
 
@@ -151,33 +150,42 @@ async function runPreview() {
 
 async function save() {
 	if (!state.selected) return
-	error.value = ''
-	const hasMenu = !!(menu.value.Caption || menu.value.Path)
+	const isNew = state.isNew
+	const name = state.selected.PageName
+	const hasMenu = !!menu.value.Caption
 	try {
-		if (state.isNew) {
+		if (isNew) {
 			await PanelService.createPage({
-				PageName: state.selected.PageName,
+				PageName: name,
+				Path: state.selected.Path,
 				Source: source.value,
 				ViewType: state.selected.ViewType,
 				Menu: hasMenu ? menu.value : null,
 			})
 		} else {
-			await PanelService.updatePage(state.selected.PageName, {
+			await PanelService.updatePage(name, {
+				Path: state.selected.Path,
 				Source: source.value,
 				ViewType: state.selected.ViewType,
 				Menu: hasMenu ? menu.value : null,
 			})
 		}
-		const name = state.selected.PageName
 		state.dirty = false
 		await refresh()
 		await select(name)
+		notify(`${name} ${isNew ? 'created' : 'saved'}`)
+		refreshMenu() // the public side menu refetches
 	} catch (e: any) {
-		error.value = e?.response?.status === 409
-			? 'A page with that name already exists.'
-			: e?.response?.status === 422
-				? 'That path is already used by another page.'
-				: 'Save failed.'
+		notify(
+			e?.response?.status === 409
+				? 'A page with that name already exists.'
+				: e?.response?.status === 422
+					? 'That path is reserved or already used by another page.'
+					: e?.response?.status === 400
+						? 'Path must start with "/".'
+						: 'Save failed.',
+			'error',
+		)
 	}
 }
 
@@ -189,8 +197,10 @@ async function doDelete() {
 		state.selected = null
 		state.dirty = false
 		await refresh()
+		notify(`${name} deleted`)
+		refreshMenu() // the public side menu refetches
 	} catch {
-		error.value = 'Delete failed.'
+		notify('Delete failed.', 'error')
 	} finally {
 		confirming.value = false
 	}
