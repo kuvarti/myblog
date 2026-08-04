@@ -31,6 +31,15 @@
 					<InputText v-model="listTagsInput" placeholder="blog"
 						class="bg-surface-2 border border-border text-fg rounded p-2" />
 				</div>
+				<div class="ml-auto flex items-center gap-2">
+					<span v-if="state.dirty" class="text-muted text-sm">unsaved changes</span>
+					<Button label="Save" class="bg-accent text-surface rounded px-4 py-2" @click="save" />
+					<button type="button" title="Editor guide" @click="showHelp = true"
+						class="border border-border text-muted hover:text-fg rounded px-3 py-2">?</button>
+				</div>
+			</div>
+
+			<div class="flex flex-wrap gap-3 items-end">
 				<div class="flex flex-col">
 					<label class="text-sm text-muted mb-1">Card summary (override)</label>
 					<Textarea v-model="state.selected.Summary" rows="2" autoResize
@@ -46,10 +55,20 @@
 					<InputText v-model="menu.Caption"
 						class="bg-surface-2 border border-border text-fg rounded p-2" />
 				</div>
+				<div v-if="!state.isNew" class="ml-auto flex items-center gap-2">
+					<Button v-if="!confirming" label="Delete Page"
+						class="border border-border text-fg rounded px-4 py-2" @click="confirming = true" />
+					<template v-else>
+						<span class="text-fg text-sm">Really delete?</span>
+						<Button label="Yes" class="bg-accent text-surface rounded px-3 py-1" @click="doDelete" />
+						<Button label="No" class="border border-border text-fg rounded px-3 py-1" @click="confirming = false" />
+					</template>
+				</div>
 			</div>
 
 			<div class="flex flex-1 gap-4 min-h-0">
 				<textarea ref="editorEl" v-model="source" @input="onInput" @scroll="onEditorScroll"
+					@keydown.tab.prevent="onEditorTab"
 					class="flex-1 bg-surface-2 border border-border text-fg rounded p-3 font-mono resize-none"
 					placeholder="Write Markdown here..."></textarea>
 				<div ref="previewEl" @scroll="onPreviewScroll"
@@ -58,19 +77,25 @@
 				</div>
 			</div>
 
-			<div class="flex items-center gap-3">
-				<Button label="Save" class="bg-accent text-surface rounded px-4 py-2" @click="save" />
-				<template v-if="!state.isNew">
-					<Button v-if="!confirming" label="Delete"
-						class="border border-border text-fg rounded px-4 py-2" @click="confirming = true" />
-					<template v-else>
-						<span class="text-fg text-sm">Really delete?</span>
-						<Button label="Yes" class="bg-accent text-surface rounded px-3 py-1" @click="doDelete" />
-						<Button label="No" class="border border-border text-fg rounded px-3 py-1" @click="confirming = false" />
-					</template>
-				</template>
-				<span v-if="state.dirty" class="text-muted text-sm">unsaved changes</span>
-			</div>
+			<teleport to="body">
+				<div v-if="showHelp" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+					<div class="absolute inset-0 bg-black/50" @click="showHelp = false"></div>
+					<div class="relative bg-surface border border-border rounded-lg w-full max-w-lg max-h-[80vh] overflow-auto p-6 text-fg">
+						<div class="flex items-center justify-between mb-4">
+							<h3 class="text-lg font-semibold">Editor guide</h3>
+							<button type="button" class="text-muted hover:text-fg text-xl leading-none" @click="showHelp = false">✕</button>
+						</div>
+						<div class="text-sm text-muted space-y-3">
+							<p><strong class="text-fg">Format.</strong> Write Markdown. Any line containing <code>&lt;</code> is emitted as raw HTML.</p>
+							<p><strong class="text-fg">Cards.</strong> Put <code>&lt;card path="/some-path"&gt;</code> on its own line to render that page as a linked card — its title, summary and image are pulled from that page.</p>
+							<p><strong class="text-fg">View type.</strong> <code>PlainHTML</code> is a normal page. <code>List</code> auto-lists every page sharing a tag with this page's <em>List tags</em>, as a card grid.</p>
+							<p><strong class="text-fg">Tags.</strong> Comma-separated. A page must be tagged to appear in a List.</p>
+							<p><strong class="text-fg">Card summary / image.</strong> Optional overrides — leave blank to auto-use the page's first paragraph / first image.</p>
+							<p><strong class="text-fg">Tab.</strong> Inserts an indent; <em>Shift+Tab</em> outdents.</p>
+						</div>
+					</div>
+				</div>
+			</teleport>
 		</template>
 	</div>
 </template>
@@ -86,6 +111,7 @@ import { refreshMenu } from '@/global/menuRefresh'
 import PanelService from '@/service/Panel.service'
 import type { MenuBinding } from '@/types/PanelModels'
 import { parseTags, formatTags } from '@/components/panelComponents/tags'
+import { applyTab } from '@/components/panelComponents/editorTab'
 import {
 	splitBlocks, interpolateScroll, buildAnchorPair,
 	measureEditorTops, measurePreviewTops,
@@ -98,6 +124,7 @@ const listTagsInput = ref('')
 const previewHtml = ref('')
 const menu = ref<MenuBinding>({ Name: '', Caption: '' })
 const confirming = ref(false)
+const showHelp = ref(false)
 
 const editorEl = ref<HTMLTextAreaElement>()
 const previewEl = ref<HTMLElement>()
@@ -165,6 +192,19 @@ function onInput() {
 	state.dirty = true
 	if (debounce) clearTimeout(debounce)
 	debounce = setTimeout(runPreview, 400)
+}
+
+// Tab / Shift+Tab indent the editor text instead of moving focus.
+function onEditorTab(e: KeyboardEvent) {
+	const ta = editorEl.value
+	if (!ta) return
+	const r = applyTab(source.value, ta.selectionStart, ta.selectionEnd, e.shiftKey)
+	source.value = r.value
+	onInput()
+	nextTick(() => {
+		ta.selectionStart = r.selStart
+		ta.selectionEnd = r.selEnd
+	})
 }
 
 async function runPreview() {

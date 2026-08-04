@@ -5,6 +5,7 @@ import (
 	services "backend/Services"
 	"context"
 	"log"
+	"os"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -22,7 +23,14 @@ var (
 
 func InitDB() {
 	var err error
-	mongoconn := options.Client().ApplyURI("mongodb://root:example@localhost:27017")
+	// Connection string comes from MONGODB_URI (e.g. an Atlas mongodb+srv URI)
+	// so the credential stays out of source control; falls back to the local
+	// docker-compose Mongo when unset.
+	uri := os.Getenv("MONGODB_URI")
+	if uri == "" {
+		uri = "mongodb://root:example@localhost:27017"
+	}
+	mongoconn := options.Client().ApplyURI(uri)
 	mongoClient, err = mongo.Connect(ctx, mongoconn)
 	if err != nil {
 		log.Fatal("error while connecting with mongo", err)
