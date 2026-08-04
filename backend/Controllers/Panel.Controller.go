@@ -13,10 +13,11 @@ import (
 type PanelController struct {
 	PageService services.PageService
 	MenuService services.MenuService
+	CardService services.CardService
 }
 
-func InitPanelController(pageService services.PageService, menuService services.MenuService, tokenService services.TokenService, apiGroup *gin.RouterGroup) PanelController {
-	pc := PanelController{PageService: pageService, MenuService: menuService}
+func InitPanelController(pageService services.PageService, menuService services.MenuService, cardService services.CardService, tokenService services.TokenService, apiGroup *gin.RouterGroup) PanelController {
+	pc := PanelController{PageService: pageService, MenuService: menuService, CardService: cardService}
 	cp := apiGroup.Group("/auth/ControlPanel")
 	cp.Use(tokenService.AuthenticateJWT())
 	{
@@ -74,6 +75,10 @@ func (pc *PanelController) GetPage(ctx *gin.Context) {
 		Path:     page.Path,
 		Source:   services.FromStorage(page.Page),
 		ViewType: page.ViewType,
+		Tags:     page.Tags,
+		Summary:  page.Summary,
+		Image:    page.Image,
+		ListTags: page.ListTags,
 	}
 	if menu, err := pc.MenuService.GetByPageName(name); err == nil {
 		detail.Menu = &models.MenuBinding{Name: menu.Name, Caption: menu.Caption}
@@ -108,7 +113,10 @@ func (pc *PanelController) CreatePage(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "path already used by another page"})
 		return
 	}
-	if err := pc.PageService.Create(req.PageName, req.Path, req.Source, req.ViewType); err != nil {
+	if err := pc.PageService.Create(models.PageWrite{
+		PageName: req.PageName, Path: req.Path, Source: req.Source, ViewType: req.ViewType,
+		Tags: req.Tags, Summary: req.Summary, Image: req.Image, ListTags: req.ListTags,
+	}); err != nil {
 		if errors.Is(err, services.ErrPageExists) {
 			ctx.JSON(http.StatusConflict, gin.H{"error": "a page with that name already exists"})
 			return
@@ -154,7 +162,10 @@ func (pc *PanelController) UpdatePage(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "path already used by another page"})
 		return
 	}
-	if err := pc.PageService.Update(name, req.Path, req.Source, req.ViewType); err != nil {
+	if err := pc.PageService.Update(name, models.PageWrite{
+		Path: req.Path, Source: req.Source, ViewType: req.ViewType,
+		Tags: req.Tags, Summary: req.Summary, Image: req.Image, ListTags: req.ListTags,
+	}); err != nil {
 		if errors.Is(err, services.ErrPageNotFound) {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": "page not found"})
 			return
@@ -229,6 +240,9 @@ func (pc *PanelController) Preview(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+	if expanded, exErr := pc.CardService.ExpandShortcodes(html); exErr == nil {
+		html = expanded
 	}
 	ctx.JSON(http.StatusOK, gin.H{"Html": html})
 }

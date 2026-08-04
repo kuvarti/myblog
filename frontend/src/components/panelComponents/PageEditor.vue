@@ -15,7 +15,30 @@
 				</div>
 				<div class="flex flex-col">
 					<label class="text-sm text-muted mb-1">View type</label>
-					<InputText v-model="state.selected.ViewType"
+					<select v-model="state.selected.ViewType"
+						class="bg-surface-2 border border-border text-fg rounded p-2 w-44">
+						<option value="PlainHTML">PlainHTML</option>
+						<option value="List">List</option>
+					</select>
+				</div>
+				<div class="flex flex-col">
+					<label class="text-sm text-muted mb-1">Tags</label>
+					<InputText v-model="tagsInput" placeholder="blog, go"
+						class="bg-surface-2 border border-border text-fg rounded p-2" />
+				</div>
+				<div v-if="state.selected.ViewType === 'List'" class="flex flex-col">
+					<label class="text-sm text-muted mb-1">List tags</label>
+					<InputText v-model="listTagsInput" placeholder="blog"
+						class="bg-surface-2 border border-border text-fg rounded p-2" />
+				</div>
+				<div class="flex flex-col">
+					<label class="text-sm text-muted mb-1">Card summary (override)</label>
+					<Textarea v-model="state.selected.Summary" rows="2" autoResize
+						class="bg-surface-2 border border-border text-fg rounded p-2 w-96 resize-y" />
+				</div>
+				<div class="flex flex-col">
+					<label class="text-sm text-muted mb-1">Card image (override)</label>
+					<InputText v-model="state.selected.Image"
 						class="bg-surface-2 border border-border text-fg rounded p-2" />
 				</div>
 				<div class="flex flex-col">
@@ -55,12 +78,14 @@
 <script setup lang="ts">
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
+import Textarea from 'primevue/textarea'
 import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { usePanelState, refresh, select } from '@/global/panelState'
 import { notify } from '@/global/notify'
 import { refreshMenu } from '@/global/menuRefresh'
 import PanelService from '@/service/Panel.service'
 import type { MenuBinding } from '@/types/PanelModels'
+import { parseTags, formatTags } from '@/components/panelComponents/tags'
 import {
 	splitBlocks, interpolateScroll, buildAnchorPair,
 	measureEditorTops, measurePreviewTops,
@@ -68,6 +93,8 @@ import {
 
 const state = usePanelState()
 const source = ref('')
+const tagsInput = ref('')
+const listTagsInput = ref('')
 const previewHtml = ref('')
 const menu = ref<MenuBinding>({ Name: '', Caption: '' })
 const confirming = ref(false)
@@ -129,6 +156,8 @@ watch(() => state.selected, (sel) => {
 	source.value = sel?.Source ?? ''
 	menu.value = sel?.Menu ?? { Name: '', Caption: '' }
 	confirming.value = false
+	tagsInput.value = formatTags(sel?.Tags ?? [])
+	listTagsInput.value = formatTags(sel?.ListTags ?? [])
 	runPreview()
 }, { immediate: true })
 
@@ -154,21 +183,20 @@ async function save() {
 	const name = state.selected.PageName
 	const hasMenu = !!menu.value.Caption
 	try {
+		const fields = {
+			Path: state.selected.Path,
+			Source: source.value,
+			ViewType: state.selected.ViewType,
+			Tags: parseTags(tagsInput.value),
+			Summary: state.selected.Summary ?? '',
+			Image: state.selected.Image ?? '',
+			ListTags: parseTags(listTagsInput.value),
+			Menu: hasMenu ? menu.value : null,
+		}
 		if (isNew) {
-			await PanelService.createPage({
-				PageName: name,
-				Path: state.selected.Path,
-				Source: source.value,
-				ViewType: state.selected.ViewType,
-				Menu: hasMenu ? menu.value : null,
-			})
+			await PanelService.createPage({ PageName: name, ...fields })
 		} else {
-			await PanelService.updatePage(name, {
-				Path: state.selected.Path,
-				Source: source.value,
-				ViewType: state.selected.ViewType,
-				Menu: hasMenu ? menu.value : null,
-			})
+			await PanelService.updatePage(name, fields)
 		}
 		state.dirty = false
 		await refresh()

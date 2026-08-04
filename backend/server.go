@@ -58,11 +58,12 @@ func InitControllers(db *mongo.Database, apiGroup *gin.RouterGroup) {
 	userService, tokenService := services.NewUserService(ctx, db.Collection("Users"))
 	menuService := services.NewMenuService(ctx, db.Collection("Menus"))
 	pageService := services.NewPageService(ctx, db.Collection("Pages"))
+	cardService := services.NewCardService(pageService, menuService)
 
 	controllers.InitUserController(userService, tokenService, apiGroup)
 	controllers.InitMenuController(menuService, pageService, apiGroup)
-	controllers.InitPageController(pageService, apiGroup)
-	controllers.InitPanelController(pageService, menuService, tokenService, apiGroup)
+	controllers.InitPageController(pageService, cardService, apiGroup)
+	controllers.InitPanelController(pageService, menuService, cardService, tokenService, apiGroup)
 }
 
 func main() {

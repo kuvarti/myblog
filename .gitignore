@@ -5,3 +5,6 @@ backend/tmp
 node_modules
 __*
 dist
+
+# SDD scratch workspace (ledgers, briefs, reports, review packages)
+.superpowers/

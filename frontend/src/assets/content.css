@@ -56,3 +56,27 @@
 .content img { max-width: 100%; height: auto; border-radius: 10px; display: block; margin: 1.4em 0; }
 /* Layout paragraphs (badge/logo rows) keep their images inline so links sit side by side; `align` still controls the row's alignment. */
 .content p[align] img { display: inline-block; margin: 0 .4em 0 0; vertical-align: middle; }
+
+/* Card system: a page rendered as a linked horizontal card (ViewType/List). */
+.content .card-grid { display: flex; flex-direction: column; gap: 1em; margin: 1.4em 0; }
+.content .card {
+  display: flex; gap: 1em; align-items: stretch;
+  border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+  background: var(--surface-2); text-decoration: none; color: var(--fg);
+  transition: border-color .2s, transform .2s;
+}
+.content .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.content .card-img {
+  width: 160px; flex: 0 0 auto; object-fit: cover;
+  border-radius: 0; margin: 0; align-self: stretch;
+}
+.content .card-body { padding: .9em 1.1em; display: flex; flex-direction: column; gap: .4em; min-width: 0; }
+.content .card-title { margin: 0; font-size: 1.15rem; color: var(--fg); }
+.content .card-summary {
+  margin: 0; color: var(--muted); font-size: .95rem;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+@media (max-width: 640px) {
+  .content .card { flex-direction: column; }
+  .content .card-img { width: 100%; height: 160px; }
+}

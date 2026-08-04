@@ -8,6 +8,10 @@ export interface SavePagePayload {
 	Path: string
 	Source: string
 	ViewType: string
+	Tags: string[]
+	Summary: string
+	Image: string
+	ListTags: string[]
 	Menu: MenuBinding | null
 }
 
