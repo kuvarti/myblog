@@ -84,12 +84,12 @@ Spec files live next to the code they cover (`*.spec.ts`): `global/` (theme, pan
 
 ## Configuration touchpoints
 
-There is no `.env` or central config — every environment value is hardcoded. Changing an environment, port, or credential means editing all of the relevant spots below by hand (there is no single source of truth, so it is easy to miss one):
+There is no `.env` file; most environment values are hardcoded. The one exception is the MongoDB URI, read from the `MONGODB_URI` env var (e.g. an Atlas `mongodb+srv` string) with the local URI as a fallback when unset. Changing an environment, port, or credential means editing all of the relevant spots below by hand (there is no single source of truth, so it is easy to miss one):
 
 | Value | Where | Current |
 |-------|-------|---------|
 | Backend API base URL | `frontend/src/service/BaseAPI.service.ts` | `http://localhost:8080/api` |
-| MongoDB URI + credentials | `backend/server.go` (`InitDB`) | `mongodb://root:example@localhost:27017` |
+| MongoDB URI + credentials | `backend/server.go` (`InitDB`) — reads `MONGODB_URI` env var, else fallback | `mongodb://root:example@localhost:27017` (fallback) |
 | Database name | `backend/server.go` (`main`) | `KuvartiBlog` |
 | CORS allowed origin | `backend/server.go` (`InitServer`) | `http://localhost:5173` (listed twice) |
 | JWT signing secret | `backend/Services/Token.Service.go` | `"SecretKey"` (TODO placeholder) |
